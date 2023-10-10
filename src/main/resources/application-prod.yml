@@ -1,0 +1,69 @@
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://172.26.60.169:3306/dianlailai?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false
+    username: root
+    # &allowPublicKeyRetrieval=true
+    password: 123
+    # 下面为连接池的补充设置，应用到上面所有数据源中
+    # 初始化大小，最小，最大
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    # 配置获取连接等待超时的时间
+    maxWait: 60000
+    # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+    timeBetweenEvictionRunsMillis: 60000
+    # 配置一个连接在池中最小生存的时间，单位是毫秒
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    # 打开PSCache，并且指定每个连接上PSCache的大小
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+    filters: stat,wall,logback
+    # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+    connectionProperties:
+    stat:
+      mergeSql: true
+      slowSqlMillis: 5000
+      # 合并多个DruidDataSource的监控数据
+    #useGlobalDataSourceStat: true
+
+  redis:
+    database: 0
+    host: 172.26.60.169
+    port: 6379
+    password: 123
+    # 连接超时时间（毫秒）
+    timeout: 3000
+    pool:
+      # 连接池最大连接数（使用负值表示没有限制）
+      max-active: 32
+      # 连接池中的最大空闲连接
+      max-idle: 8
+      # 连接池中的最小空闲连接
+      min-idle: 4
+
+logging:
+  #  level:
+  #    root: INFO
+  #  org:
+  #    springframework:
+  #      web: DEBUG
+  file:
+    name: ./logs/${spring.application.name}-log.log
+
+
+
+alipay:
+  appId: 2021004101686334
+  privateKey: MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCjfb/u4rmD7KoA3eg9KiS7kJmhtguGkIPC8kwHT71eLU/hWlJWfKorR/Vy2SVuZfbIdwRzl+nWwoUIuOpnsTywo7Jikr7ZXVzJryYZzMgaBbo+nZbML7CFzxr7U9Fs49L25877q8Hvd3TrZaJjCnxmNyyIPsCE8kHj/OFHfDbFHsacWP9OfZlgIbtf1skUY9hj2l/JQaqlwcDxyxNeIhuw9i8geWasKpqKWqNMMwC13DBf1iOzqSZMz7cuATW1jzbl6XNuEUHOxsRduEVtrb/CK73SFNa6jnAZT8I338ytfp7ByTIosYfZR+CWJRRK0E3ntyo/+PsxNqGclDojouhtAgMBAAECggEAEokBJ44gxiogo/SEjdqnS3R7VnATInBj38gkgnex2ml8sunQh+meSUXhN+ISck+xCM0lfg1s/2ISPwjn2lWnscb9RFuqs234RQ1MXoRu8zRPByZKoF+PvbvbLT81cQjrM/7X4oR4ejOq170wCdZ4gAYlUFT88pWcjsJur/IPK43AIQm4u9cKH6WKpWwQBgJc3LkW1LcIBQE4Z9uFg9+qiy2dXbSPsqCf4nq+AUmGM4G/7jzx5DJdsCU2yiL0g9Olnokyw04A+KKpJ0go5KDfzY3CrdneE60gOyBPA/L4Bn9tZ1xesHFKnOZ1rbG930xzGVcOtHMoBH60/V4Ojb5/gQKBgQD/eUe/iomltSZX4BLKaGivdo243xLmIEAy1hQnSQMolF48w6YYtCps3gxCCyIS3sNM3qqPd1Y6pixKMAPUJ9GYUfSqTF/UfS/+V+O9vhiSooxAzmuL/3+Fd5yFNBvUQN1ffIlZorCnDBaVvKdS2D0YsDhRtGE9fP6n8YREtpfSfQKBgQCj0/bLquCoiFT2GyIBxTBUBu+AVP9mu+bxGDPgmGwdQWLMaq3E72A4l3lLRVrRafIcoZi6Ta4pPRs6TAEmDrv8FRCmPvQNplxYY6PfqBRecr5IcxHUoo3IX/ELqpjDy6zldC9OQylcWamobH7xKo2cy6VvD7KZidBr6wsjQgHgsQKBgF5G6mRUArHlJM4/AZAycZd235v+rmHAOxDHkc5hkknSXuh7pvrs2c8tLkbdBukBzf67GSQyfN7N3gBOscsEGsPkUq7Z2m9291QcKQ4nbbgHRkzQID4cvnmJh3hcn3x3p3oKYkFy2U/8FQWTBgh7hihrN41nTI89ZlihtxcIbwSdAoGBAJC5hHDhcHuRjDSpPX6A2zOvuM4OyFzSK67aaaHEJOYnSAc7Sm0J5l+3+G/1Qchzpm2Cl/AlBXDqyW3TjMQ5CfokBcRHIsQYLcXrp+3BhtT02oIYHS1RuJzFnKRovXFiMUe2PsANdrFdiBIAXpfftqBICso0/NrEMznSttEb05rRAoGBAORG3iLj63DouMWSPUmet7C108dpAjC5ov306crDPaTAQ9Hj8gdlsKqPjpmqqZ7/ndw38rSmBpW5+G0H5TuzTIX5xnNYndazSG0PnJJJnJsrVE7183mKcQBlJipj7Vlp28P1BvUm4vCkn4KIuUq87PObvF3uH9dOVMvh/vcvA7N8
+  publicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoL7yOx2Q0TWecfsK2W2QSeZtV+8bgKqZdvmQoG+/V2/KCvYJbhUIvTM19oLQjVDLqUpvBRKL2eFm80c6PNIKewQnuxhEADRn6/tptaLM+I/1nmzGYmqfZeEw+71jshsYYkbq0+4haEsRwZMGyrvDHXFps38RoFRNCajFkZdkQDudmdFk361FbCU2a9d9ldPLCJNzAR3kQWyZ+2urX70Z0ehpMaVMymkOup6H3MsrhdfnUrMsltTHqdvvhwRcVDHrPZsqvmlRORlXy3U5c2VH4YRFiG1eIMYr8iWj184znWelfnX8zvPXHyZp07KIo+klNyQxIhn25oOs2pwVSxZn7wIDAQAB
+  serverUrl: https://openapi.alipay.com/gateway.do
+  domain: htpp://www.tagge.xyz
+  notifyUrl: http://43.156.78.227:8003/ali/pay/notify

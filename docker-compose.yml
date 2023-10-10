@@ -1,0 +1,19 @@
+version: '2'
+services:
+  shir-boot:
+    build:
+      context: ./  #必须确保使用docker-compose时此目录存在
+    restart: on-failure
+    container_name: shir-boot-system
+    image: 127.0.0.1:5000/project/shir-boot:latest
+    hostname: shir-boot-system
+    ports:
+      - 8009:8009
+    networks:
+      - shir-boot-networks
+    environment:
+      - SPRING_PROFILES_ACTIVE=test #指定spring boot启动环境
+      
+networks:
+  networks:
+    external: true  #使用已有的networks

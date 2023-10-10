@@ -1,0 +1,243 @@
+package io.github.reinershir.boot.controller;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.CollectionUtils;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+import io.github.reinershir.auth.annotation.OptionType;
+import io.github.reinershir.auth.annotation.Permission;
+import io.github.reinershir.auth.annotation.PermissionMapping;
+import io.github.reinershir.auth.core.model.Role;
+import io.github.reinershir.auth.core.support.AuthorizeManager;
+import io.github.reinershir.auth.entity.TokenInfo;
+import io.github.reinershir.boot.common.BaseController;
+import io.github.reinershir.boot.common.Result;
+import io.github.reinershir.boot.common.ValidateGroups;
+import io.github.reinershir.boot.contract.ShirBootContracts;
+import io.github.reinershir.boot.core.international.InternationalizationMessager;
+import io.github.reinershir.boot.core.query.QueryHelper;
+import io.github.reinershir.boot.dto.req.LoginDTO;
+import io.github.reinershir.boot.dto.req.UpdatePasswordDTO;
+import io.github.reinershir.boot.dto.req.UserReqDTO;
+import io.github.reinershir.boot.dto.res.LoginRespDTO;
+import io.github.reinershir.boot.dto.res.UserInfoDTO;
+import io.github.reinershir.boot.model.User;
+import io.github.reinershir.boot.service.impl.UserServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+
+@RequestMapping("user")
+@RestController
+@Tag(description = "user management",name = "user management")
+@PermissionMapping(value="USER")
+public class UserController extends BaseController{
+	
+	
+	@Autowired
+	UserServiceImpl userService;
+	@Autowired(required = false)
+	AuthorizeManager authorizeManager;
+	@Value(value="${lui-auth.authrizationConfig.administratorId}")
+	String administratorId;
+	
+	@PostMapping("token")
+	@Permission(value=OptionType.SKIP,name="Login ")
+	@Operation(summary = "Login ",description = "Login")
+	public Result<LoginRespDTO> login(@Validated @RequestBody LoginDTO loginDTO) throws Exception{
+		User user = userService.login(loginDTO.getLoginName(), loginDTO.getPassword());
+		if(user==null) {
+			return Result.failed(InternationalizationMessager.getInstance().getMessage("message.notmatch"));
+		}	
+		LoginRespDTO resp = new LoginRespDTO();
+		resp.setAccessToken(user.getPassword());
+		resp.setId(user.getId());
+		resp.setLoginName(user.getLoginName());
+		resp.setNickName(user.getNickName());
+		//resp.setMenus(authorizeManager.getMenusByUser(user.getId().toString()));
+		return Result.ok(resp);
+	}
+	
+	@Operation(summary="User list", description = "User list")
+	@Parameters({
+		@Parameter(name="pageNo",description="pageNo",required = true,in = ParameterIn.QUERY),
+		@Parameter(name="pageSize",description="pageSize",required = true,in = ParameterIn.QUERY),
+	})
+	@GetMapping(value = "/list")
+	public Result<IPage<User>> queryPageList(User entity,
+								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+								   HttpServletRequest req) {
+		QueryWrapper<User> queryWrapper = QueryHelper.initQueryWrapper(entity);
+		Page<User> page = new Page<User>(pageNo, pageSize);
+		IPage<User> pageList = userService.page(page, queryWrapper);
+		return Result.ok(pageList);
+	}
+	
+//	@Permission(name = "用户列表",value = OptionType.LIST)
+//	@Operation(summary = "用户列表查询接口{DOC.API.DESCRIPTION.LIST}",description = "用户列表")
+//	@GetMapping
+//	public Result<Page<UserListRespDTO>> list(@Validated UserListDTO userListDTO){
+//		return ResponseUtil.generateSuccessDTO(userService.list(userListDTO));
+//	}
+	
+	@ResponseStatus(code = HttpStatus.CREATED)
+	@Permission(name = "Insert user",value = OptionType.ADD)
+	@Operation(summary = "Insert user",description = "Insert user")
+	@PostMapping
+	public Result<Object> addUser(@Validated(value = ValidateGroups.AddGroup.class) @RequestBody UserReqDTO user){
+		User result = userService.insert(user);
+		if(result!=null) {
+			return Result.ok();
+		}
+		return Result.failed();
+	}
+	
+	@Permission(name = "Update user",value = OptionType.UPDATE)
+	@Operation(summary = "Update user",description = "Update user")
+	@PutMapping
+	public Result<Object> updateUser(@Validated(value = ValidateGroups.UpdateGroup.class) @RequestBody UserReqDTO user){
+		if(userService.updateUser(user)>0) {
+			return Result.ok();
+		}
+		return Result.failed();
+	}
+	
+	@Permission(name = "Remove user",value = OptionType.DELETE)
+	@Parameter(name = "id",description = "User ID",required = true)
+	@Operation(summary = "Remove user",description = "Remove user")
+	@DeleteMapping("/{id}")
+	public Result<Object> delete(@PathVariable("id") Long id){
+		if(userService.logicDeleteUser(id)>0) {
+			try {
+				authorizeManager.logout(id.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+				return Result.failed("删除失败！");
+			}
+			return Result.ok("删除成功！");
+		}
+		return Result.failed("删除失败！");
+	}
+	
+	@Permission(name = "获取用户所绑定的角色ID",value = OptionType.LOGIN)
+	@Parameter(name = "userId",description = "用户ID",required = true)
+	@Operation(summary = "获取用户所绑定的角色ID",description = "获取用户所绑定的角色")
+	@GetMapping("/{userId}/roleIds")
+	public Result<List<Long>> getRoleIdByUser(@PathVariable("userId") Long userId){
+		return Result.ok(userService.getRoleByUser(userId+""));
+	}
+	
+	@Permission(name = "修改密码",value = OptionType.LOGIN)
+	@Operation(summary = "修改密码",description = "修改当前登陆用户密码")
+	@PatchMapping("password")
+	public Result<Object> updatePassword(@Validated @RequestBody UpdatePasswordDTO dto,HttpServletRequest request){
+		return userService.updatePassword(request, dto.getPassword(),dto.getNewPassword());
+		
+	}
+
+	@Permission(name = "重置密码",value = OptionType.LOGIN)
+	@Operation(summary = "重置密码",description = "重置用户密码")
+	@GetMapping("/{userId}/password/reset")
+	public Result<Object> resetPassword(@PathVariable("userId") Long userId){
+		if(userService.resetPassword(userId,"123456")) {
+			return Result.ok("重置密码为“123456”成功！");
+		}
+		return Result.failed("重置密码失败！");
+	}
+	
+	@DeleteMapping("token")
+	@Permission(name = "用户登出",value = OptionType.LOGIN)
+	@Operation(summary = "用户登出",description = "登出接口")
+	public Result<Object> logout(HttpServletRequest request){
+		userService.logout(request);
+		return Result.ok();
+	}
+
+	@Permission(name = "Get user info",value = OptionType.LIST)
+	@Parameter(name = "id",description = "User ID",required = true)
+	@Operation(summary = "Get user info",description = "Get user info")
+	@GetMapping("/{id}")
+	public Result<User> detail(@PathVariable("id") Long id){
+		User user = userService.getById(id);
+		if(user!=null) {
+			user.setPassword(null);
+			return Result.ok(user);
+		}
+		return Result.failed("参数错误!");
+	}
+	
+	@Permission(name = "Get user info by token",value = OptionType.LOGIN)
+	@Operation(summary = "Get user info by token",description = "Get user info by token")
+	@GetMapping("/info")
+	public Result<UserInfoDTO> getUserInfo(HttpServletRequest request){
+		TokenInfo tokenInfo = authorizeManager.getTokenInfo(request);
+		User user = userService.getById(tokenInfo.getUserId());
+		if(user!=null) {
+			user.setPassword(null);
+			UserInfoDTO resp = new UserInfoDTO();
+			BeanUtils.copyProperties(user, resp);
+			if(tokenInfo.getUserId().equals(administratorId)&&administratorId!=null) {
+				resp.setRoles(Arrays.asList("admin"));
+			}else {
+				List<Role> roles = authorizeManager.getRoleAccess().selectRoleByUser(tokenInfo.getUserId());
+				List<String> roleNames = new LinkedList<>();
+				if(!CollectionUtils.isEmpty(roles)) {
+					roles.forEach(r->roleNames.add(r.getRoleName()));
+				}
+				resp.setRoles(roleNames);
+			}
+			return Result.ok(resp);
+		}
+		return Result.failed("参数错误!");
+	}
+	
+	@Permission(name = "禁用用户",value = OptionType.DISABLE)
+	@Parameter(name = "id",description = "用户ID",required = true)
+	@Operation(summary = "禁用用户",description = "禁用用户")
+	@PatchMapping("/{id}/disable")
+	public Result<Long> disable(@PathVariable("id") Long id){
+		if(userService.disbleOrEnable(id, ShirBootContracts.STATUS_DISABLE)) {
+			return Result.ok(id);
+		}
+		return Result.failed("操作失败");
+	}
+	
+	@Permission(name = "启用用户",value = OptionType.ENABLE)
+	@Parameter(name = "id",description = "用户ID",required = true)
+	@Operation(summary = "启用用户",description = "启用用户")
+	@PatchMapping("/{id}/enable")
+	public Result<Long> enable(@PathVariable("id") Long id){
+		if(userService.disbleOrEnable(id, ShirBootContracts.STATUS_ENABLE)) {
+			return Result.ok(id);
+		}
+		return Result.failed("操作失败");
+	}
+	
+
+}

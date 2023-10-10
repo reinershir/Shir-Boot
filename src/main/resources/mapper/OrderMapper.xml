@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xh.thesis.mapper.OrderMapper">
+
+
+	<select id="selectToday" resultType="double" >
+		SELECT sum(price) from ORDERS WHERE DATE_FORMAT(CREATE_TIME, '%Y-%m-%d') = CURDATE() AND ORDER_TYPE = #{orderType};
+	</select>
+
+</mapper>
