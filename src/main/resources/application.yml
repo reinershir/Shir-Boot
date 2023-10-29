@@ -45,20 +45,21 @@ spring:
       # 合并多个DruidDataSource的监控数据
     #useGlobalDataSourceStat: true
     
-  redis:
-    database: 0
-    host: 43.156.78.227
-    port: 6379
-    password: paper123456
-    # 连接超时时间（毫秒）
-    timeout: 3000
-    pool:
-    # 连接池最大连接数（使用负值表示没有限制）
-      max-active: 32
-      # 连接池中的最大空闲连接
-      max-idle: 8
-      # 连接池中的最小空闲连接
-      min-idle: 4
+  data: 
+    redis:
+      database: 0
+      host: localhost
+      port: 6379
+      # password: paper123456
+      # 连接超时时间（毫秒）
+      timeout: 3500
+      pool:
+      # 连接池最大连接数（使用负值表示没有限制）
+        max-active: 32
+        # 连接池中的最大空闲连接
+        max-idle: 8
+        # 连接池中的最小空闲连接
+        min-idle: 4
       
   servlet:
     multipart:
@@ -112,7 +113,7 @@ lui-auth:
   authrizationConfig: 
     administratorId: 1
     tokenSalt: shir-boot123@
-    tokenExpireTime: 3600
+    tokenExpireTime: 10800
   intergrateConfig: 
     enable: true    #Automatic generation of roles and menu tables
   securityConfig:

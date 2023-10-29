@@ -23,6 +23,7 @@ import io.github.reinershir.auth.core.support.AuthorizeManager;
 import io.github.reinershir.auth.entity.TokenInfo;
 import io.github.reinershir.boot.common.Result;
 import io.github.reinershir.boot.contract.ShirBootContracts;
+import io.github.reinershir.boot.core.international.InternationalizationMessager;
 import io.github.reinershir.boot.dto.req.UserListDTO;
 import io.github.reinershir.boot.dto.req.UserReqDTO;
 import io.github.reinershir.boot.dto.res.UserListRespDTO;
@@ -109,8 +110,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
 		user.setCreateDate(new Date());
 		User entity = new User();
 		entity.setLoginName(user.getLoginName());
+		entity.setIsDelete(0);
 		if(baseMapper.selectCount(new QueryWrapper<>(entity))>0) {
-			throw new BusinessException("登陆名已经存在！");
+			throw new BusinessException(InternationalizationMessager.getInstance().getMessage("message.user.exsist"));
 		}
 		user.setPassword(getEncodingString(user.getLoginName(),user.getPassword()));
 		int result = baseMapper.insert(user);

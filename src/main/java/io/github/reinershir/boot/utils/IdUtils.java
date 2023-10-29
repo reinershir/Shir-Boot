@@ -7,6 +7,9 @@ import java.security.MessageDigest;
 import java.util.UUID;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.StringUtils;
+
+import io.github.reinershir.boot.exception.AuthenticationException;
 
 /**
  *  用于生产各种各样的ID
@@ -155,6 +158,18 @@ public class IdUtils {
         }
 
     }
+    
+    public static Long parseUserId(String userIdStr) {
+		if(StringUtils.hasText(userIdStr)) {
+			try {
+				return Long.parseLong(userIdStr);
+			} catch (NumberFormatException e) {
+				throw new AuthenticationException("token error！");
+			}
+		}else {
+			throw new AuthenticationException("token error！");
+		}
+	}
 
     /* ---------------------------------------------分割线------------------------------------------------ */
     /** 数据处理的相关类  */

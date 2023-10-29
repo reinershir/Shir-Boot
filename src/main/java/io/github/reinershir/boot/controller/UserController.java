@@ -29,6 +29,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.github.reinershir.auth.annotation.OptionType;
 import io.github.reinershir.auth.annotation.Permission;
 import io.github.reinershir.auth.annotation.PermissionMapping;
+import io.github.reinershir.auth.core.model.Menu;
 import io.github.reinershir.auth.core.model.Role;
 import io.github.reinershir.auth.core.support.AuthorizeManager;
 import io.github.reinershir.auth.entity.TokenInfo;
@@ -45,6 +46,7 @@ import io.github.reinershir.boot.dto.res.LoginRespDTO;
 import io.github.reinershir.boot.dto.res.UserInfoDTO;
 import io.github.reinershir.boot.model.User;
 import io.github.reinershir.boot.service.impl.UserServiceImpl;
+import io.github.reinershir.boot.utils.IdUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -96,15 +98,9 @@ public class UserController extends BaseController{
 		QueryWrapper<User> queryWrapper = QueryHelper.initQueryWrapper(entity);
 		Page<User> page = new Page<User>(pageNo, pageSize);
 		IPage<User> pageList = userService.page(page, queryWrapper);
+		pageList.getRecords().forEach(u->u.setPassword(null));
 		return Result.ok(pageList);
 	}
-	
-//	@Permission(name = "用户列表",value = OptionType.LIST)
-//	@Operation(summary = "用户列表查询接口{DOC.API.DESCRIPTION.LIST}",description = "用户列表")
-//	@GetMapping
-//	public Result<Page<UserListRespDTO>> list(@Validated UserListDTO userListDTO){
-//		return ResponseUtil.generateSuccessDTO(userService.list(userListDTO));
-//	}
 	
 	@ResponseStatus(code = HttpStatus.CREATED)
 	@Permission(name = "Insert user",value = OptionType.ADD)
@@ -214,29 +210,36 @@ public class UserController extends BaseController{
 			}
 			return Result.ok(resp);
 		}
-		return Result.failed("参数错误!");
+		return Result.failed("paramemter error!");
 	}
 	
-	@Permission(name = "禁用用户",value = OptionType.DISABLE)
-	@Parameter(name = "id",description = "用户ID",required = true)
-	@Operation(summary = "禁用用户",description = "禁用用户")
+	@Permission(name = "Get user info by token",value = OptionType.LOGIN)
+	@Operation(summary = "Get user info by token",description = "Get user info by token")
+	@GetMapping("/menus")
+	public Result<List<Menu>> getUserMenus(HttpServletRequest request){
+		return Result.ok(authorizeManager.getMenusByUser(authorizeManager.getTokenInfo(request).getUserId()));
+	} 
+	
+	@Permission(name = "disable user",value = OptionType.DISABLE)
+	@Parameter(name = "id",description = "User ID",required = true)
+	@Operation(summary = "disable user",description = "disable user")
 	@PatchMapping("/{id}/disable")
 	public Result<Long> disable(@PathVariable("id") Long id){
 		if(userService.disbleOrEnable(id, ShirBootContracts.STATUS_DISABLE)) {
 			return Result.ok(id);
 		}
-		return Result.failed("操作失败");
+		return Result.failed();
 	}
 	
-	@Permission(name = "启用用户",value = OptionType.ENABLE)
-	@Parameter(name = "id",description = "用户ID",required = true)
-	@Operation(summary = "启用用户",description = "启用用户")
+	@Permission(name = "enable user",value = OptionType.ENABLE)
+	@Parameter(name = "id",description = "User ID",required = true)
+	@Operation(summary = "enable user",description = "enable user")
 	@PatchMapping("/{id}/enable")
 	public Result<Long> enable(@PathVariable("id") Long id){
 		if(userService.disbleOrEnable(id, ShirBootContracts.STATUS_ENABLE)) {
 			return Result.ok(id);
 		}
-		return Result.failed("操作失败");
+		return Result.failed();
 	}
 	
 
