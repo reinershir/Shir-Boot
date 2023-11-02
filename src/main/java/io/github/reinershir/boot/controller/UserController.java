@@ -37,16 +37,16 @@ import io.github.reinershir.boot.common.BaseController;
 import io.github.reinershir.boot.common.Result;
 import io.github.reinershir.boot.common.ValidateGroups;
 import io.github.reinershir.boot.contract.ShirBootContracts;
-import io.github.reinershir.boot.core.international.InternationalizationMessager;
+import io.github.reinershir.boot.core.international.IMessager;
 import io.github.reinershir.boot.core.query.QueryHelper;
 import io.github.reinershir.boot.dto.req.LoginDTO;
+import io.github.reinershir.boot.dto.req.ResetPasswordDTO;
 import io.github.reinershir.boot.dto.req.UpdatePasswordDTO;
 import io.github.reinershir.boot.dto.req.UserReqDTO;
 import io.github.reinershir.boot.dto.res.LoginRespDTO;
 import io.github.reinershir.boot.dto.res.UserInfoDTO;
 import io.github.reinershir.boot.model.User;
 import io.github.reinershir.boot.service.impl.UserServiceImpl;
-import io.github.reinershir.boot.utils.IdUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -74,7 +74,7 @@ public class UserController extends BaseController{
 	public Result<LoginRespDTO> login(@Validated @RequestBody LoginDTO loginDTO) throws Exception{
 		User user = userService.login(loginDTO.getLoginName(), loginDTO.getPassword());
 		if(user==null) {
-			return Result.failed(InternationalizationMessager.getInstance().getMessage("message.notmatch"));
+			return Result.failed(IMessager.getInstance().getMessage("message.notmatch"));
 		}	
 		LoginRespDTO resp = new LoginRespDTO();
 		resp.setAccessToken(user.getPassword());
@@ -106,10 +106,10 @@ public class UserController extends BaseController{
 	@Permission(name = "Insert user",value = OptionType.ADD)
 	@Operation(summary = "Insert user",description = "Insert user")
 	@PostMapping
-	public Result<Object> addUser(@Validated(value = ValidateGroups.AddGroup.class) @RequestBody UserReqDTO user){
+	public Result<User> addUser(@Validated(value = ValidateGroups.AddGroup.class) @RequestBody UserReqDTO user){
 		User result = userService.insert(user);
 		if(result!=null) {
-			return Result.ok();
+			return Result.ok(user);
 		}
 		return Result.failed();
 	}
@@ -117,9 +117,9 @@ public class UserController extends BaseController{
 	@Permission(name = "Update user",value = OptionType.UPDATE)
 	@Operation(summary = "Update user",description = "Update user")
 	@PutMapping
-	public Result<Object> updateUser(@Validated(value = ValidateGroups.UpdateGroup.class) @RequestBody UserReqDTO user){
+	public Result<User> updateUser(@Validated(value = ValidateGroups.UpdateGroup.class) @RequestBody UserReqDTO user){
 		if(userService.updateUser(user)>0) {
-			return Result.ok();
+			return Result.ok(user);
 		}
 		return Result.failed();
 	}
@@ -149,22 +149,21 @@ public class UserController extends BaseController{
 		return Result.ok(userService.getRoleByUser(userId+""));
 	}
 	
-	@Permission(name = "修改密码",value = OptionType.LOGIN)
-	@Operation(summary = "修改密码",description = "修改当前登陆用户密码")
+	@Permission(name = "Update password",value = OptionType.LOGIN)
+	@Operation(summary = "Update password",description = "Update password")
 	@PatchMapping("password")
 	public Result<Object> updatePassword(@Validated @RequestBody UpdatePasswordDTO dto,HttpServletRequest request){
 		return userService.updatePassword(request, dto.getPassword(),dto.getNewPassword());
-		
 	}
 
-	@Permission(name = "重置密码",value = OptionType.LOGIN)
-	@Operation(summary = "重置密码",description = "重置用户密码")
-	@GetMapping("/{userId}/password/reset")
-	public Result<Object> resetPassword(@PathVariable("userId") Long userId){
-		if(userService.resetPassword(userId,"123456")) {
-			return Result.ok("重置密码为“123456”成功！");
+	@Permission(name = "Rest password",value = OptionType.CUSTOM,customPermissionCode = "RESETPASSWORD")
+	@Operation(summary = "Rest password",description = "Rest password")
+	@PatchMapping("/password/reset")
+	public Result<Object> resetPassword(@RequestBody ResetPasswordDTO dto){
+		if(userService.resetPassword(dto.getUser(),dto.getNewPassword())) {
+			return Result.ok();
 		}
-		return Result.failed("重置密码失败！");
+		return Result.failed();
 	}
 	
 	@DeleteMapping("token")

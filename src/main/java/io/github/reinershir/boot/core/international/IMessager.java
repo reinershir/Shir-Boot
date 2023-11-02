@@ -13,12 +13,12 @@ import io.github.reinershir.boot.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class InternationalizationMessager {
+public class IMessager {
 
 	private Properties properties;
-	private static InternationalizationMessager instance;
+	private static IMessager instance;
 	
-	public InternationalizationMessager() throws IOException {
+	public IMessager() throws IOException {
 		String defaultPath = "i18n/message.properties";
 		String path = "i18n/message_"+LocaleContextHolder.getLocale().getLanguage().toLowerCase()+"_"+LocaleContextHolder.getLocale().getCountry()+".properties";
 		
@@ -34,16 +34,20 @@ public class InternationalizationMessager {
 		}
 	}
 	
-	public static synchronized InternationalizationMessager getInstance() {
-			if(InternationalizationMessager.instance==null) {
+	public static synchronized IMessager getInstance() {
+			if(IMessager.instance==null) {
 				try {
-					InternationalizationMessager.instance = new InternationalizationMessager();
+					IMessager.instance = new IMessager();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-		return InternationalizationMessager.instance;
+		return IMessager.instance;
 		
+	}
+	
+	public static String getMessageByCode(String code) {
+		return IMessager.getInstance().getMessage(code);
 	}
 	
 	public String getMessage(String code) {

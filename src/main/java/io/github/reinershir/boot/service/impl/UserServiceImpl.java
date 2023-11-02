@@ -23,7 +23,7 @@ import io.github.reinershir.auth.core.support.AuthorizeManager;
 import io.github.reinershir.auth.entity.TokenInfo;
 import io.github.reinershir.boot.common.Result;
 import io.github.reinershir.boot.contract.ShirBootContracts;
-import io.github.reinershir.boot.core.international.InternationalizationMessager;
+import io.github.reinershir.boot.core.international.IMessager;
 import io.github.reinershir.boot.dto.req.UserListDTO;
 import io.github.reinershir.boot.dto.req.UserReqDTO;
 import io.github.reinershir.boot.dto.res.UserListRespDTO;
@@ -93,15 +93,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
 	 * @param password 密码
 	 * @return MD5后的字符串
 	 */
-	private static String getEncodingString(String salt,String password) {
+	private String getEncodingString(String salt,String password) {
 		String encodingPwd = MD5.encode(password + ShirBootContracts.LOGIN_SALT);
 		//取后8位作为盐增加彩虹表破解难度
 		String requiredPwd = MD5.encode(salt).substring(8)+encodingPwd;
 		return requiredPwd;
-	}
-	
-	public static void main(String[] args) {
-		System.out.println(getEncodingString("admin","e10adc3949ba59abbe56e057f20f883e"));
 	}
 	
 	@Transactional
@@ -112,7 +108,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
 		entity.setLoginName(user.getLoginName());
 		entity.setIsDelete(0);
 		if(baseMapper.selectCount(new QueryWrapper<>(entity))>0) {
-			throw new BusinessException(InternationalizationMessager.getInstance().getMessage("message.user.exsist"));
+			throw new BusinessException(IMessager.getInstance().getMessage("message.user.exsist"));
 		}
 		user.setPassword(getEncodingString(user.getLoginName(),user.getPassword()));
 		int result = baseMapper.insert(user);

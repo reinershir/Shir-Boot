@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.github.reinershir.boot.contract.ShirBootContracts;
-import io.github.reinershir.boot.core.international.InternationalizationMessager;
+import io.github.reinershir.boot.core.international.IMessager;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Response DTO")
@@ -40,7 +40,7 @@ public class Result<T> implements Serializable{
 	}
 	
 	private void initSuccess() {
-		this.message = InternationalizationMessager.getInstance().getMessage("message.success");
+		this.message = IMessager.getInstance().getMessage("message.success");
 		this.code = ShirBootContracts.RESP_CODE_SUCCESS;
 	}
 	
@@ -60,7 +60,7 @@ public class Result<T> implements Serializable{
 	}
 	
 	public static <T> Result<T> failed() {
-		return new Result<T>(InternationalizationMessager.getInstance().getMessage("message.failed"),ShirBootContracts.RESP_CODE_FAILE,false);
+		return new Result<T>(IMessager.getInstance().getMessage("message.failed"),ShirBootContracts.RESP_CODE_FAILE,false);
 	}
 	
 	public static <T> Result<T> failed(String message) {
