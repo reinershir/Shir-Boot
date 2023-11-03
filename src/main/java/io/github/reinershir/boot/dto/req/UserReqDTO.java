@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class UserReqDTO extends User{
 
 	@TableField(exist = false)
-	@Schema(description = "The role ID to which this user is to be bound",  required = false, example = "[1,2,10]")
+	@Schema(description = "The role ID to which this user is to be bound",  nullable = true, example = "[1,2,10]")
 	private List<Long> roleIds;
 	public List<Long> getRoleIds() {
 		return roleIds;
