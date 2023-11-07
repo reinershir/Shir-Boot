@@ -2,7 +2,7 @@ package io.github.reinershir.boot.core.easygenerator.model;
 
 import java.util.List;
 
-public class GenetateInfo {
+public class GenerateInfo {
 
 	private String tableName;
 	private String modelName;
@@ -15,7 +15,7 @@ public class GenetateInfo {
 	 */
 	private List<FieldInfo> fieldInfos;
 	
-	public GenetateInfo(String tableName, String modelName, String modelDescription) {
+	public GenerateInfo(String tableName, String modelName, String modelDescription) {
 		super();
 		this.tableName = tableName;
 		this.modelName = modelName;

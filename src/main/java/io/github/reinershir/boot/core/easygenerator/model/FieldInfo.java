@@ -10,9 +10,19 @@ public class FieldInfo {
 	private boolean isPrimaryKey = false;
 	private String defaultValue;
 	/**
+	 * 该字段的查询条件
+	 */
+	private String operation;
+	/**
+	 * 字段长度
+	 */
+	private Integer columnLength;
+	/**
 	 * 是否允许空值
 	 */
 	private boolean isNull = true;
+	
+	public FieldInfo() {}
 	
 	public FieldInfo(String name,String javaType, Integer columnLength) {
 		super();
@@ -20,11 +30,7 @@ public class FieldInfo {
 		this.javaType = javaType;
 		this.columnLength = columnLength;
 	}
-	/**
-	 * 字段长度
-	 */
-	private Integer columnLength;
-	
+
 	public String getName() {
 		return name;
 	}
@@ -43,7 +49,6 @@ public class FieldInfo {
 	public void setComment(String comment) {
 		this.comment = comment;
 	}
-	
 	public String getColumnName() {
 		return columnName;
 	}
@@ -56,11 +61,11 @@ public class FieldInfo {
 	public void setPrimaryKey(boolean isPrimaryKey) {
 		this.isPrimaryKey = isPrimaryKey;
 	}
-	public Integer getColumnLength() {
-		return columnLength;
+	public String getDefaultValue() {
+		return defaultValue;
 	}
-	public void setColumnLength(Integer columnLength) {
-		this.columnLength = columnLength;
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
 	}
 	public boolean getIsNull() {
 		return isNull;
@@ -68,11 +73,19 @@ public class FieldInfo {
 	public void setIsNull(boolean isNull) {
 		this.isNull = isNull;
 	}
-	public String getDefaultValue() {
-		return defaultValue;
+	public Integer getColumnLength() {
+		return columnLength;
 	}
-	public void setDefaultValue(String defaultValue) {
-		this.defaultValue = defaultValue;
+	public void setColumnLength(Integer columnLength) {
+		this.columnLength = columnLength;
+	}
+
+	public String getOperation() {
+		return operation;
+	}
+
+	public void setOperation(String operation) {
+		this.operation = operation;
 	}
 	
 	

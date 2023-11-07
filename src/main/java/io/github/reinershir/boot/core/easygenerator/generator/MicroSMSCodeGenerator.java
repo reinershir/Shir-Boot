@@ -17,6 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.alibaba.druid.pool.DruidDataSource;
+
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -24,7 +31,7 @@ import freemarker.template.TemplateExceptionHandler;
 import io.github.reinershir.boot.core.easygenerator.model.DatabaseInfo;
 import io.github.reinershir.boot.core.easygenerator.model.EntityInfo;
 import io.github.reinershir.boot.core.easygenerator.model.FieldInfo;
-import io.github.reinershir.boot.core.easygenerator.model.GenetateInfo;
+import io.github.reinershir.boot.core.easygenerator.model.GenerateInfo;
 import io.github.reinershir.boot.core.easygenerator.utils.FieldUtils;
 
 /**
@@ -33,6 +40,7 @@ import io.github.reinershir.boot.core.easygenerator.utils.FieldUtils;
  * @author ReinerShir
  *
  */
+@Component
 public class MicroSMSCodeGenerator {
 
 	private final String TEMPLATE_DIR = "/templates/sm";
@@ -45,152 +53,173 @@ public class MicroSMSCodeGenerator {
 	private String baseControllerImport = null;
 
 	String basePath = System.getProperty("user.dir") + "/src/main/java/";
+	
+	DatabaseInfo databaseInfo;
+	
+	DruidDataSource dataSource;
+	
+	@Autowired
+	public MicroSMSCodeGenerator(DruidDataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+	
+	public MicroSMSCodeGenerator(DatabaseInfo databaseInfo) {
+		this.databaseInfo=databaseInfo;
+	}
+	
+	private Connection getConnectionByDatebaseInfo(DatabaseInfo databaseInfo) throws ClassNotFoundException, SQLException {
+		// 驱动程序名
+		String driver = databaseInfo.getDriver();
+		// URL指向要访问的数据库名mydata
+		String url = databaseInfo.getUrl();
+		// MySQL配置时的用户名
+		String user = databaseInfo.getName();
+		// MySQL配置时的密码
+		String password = databaseInfo.getPassword();
+		// 加载驱动程序
+		Class.forName(driver);
+		// 1.getConnection()方法，连接MySQL数据库！！
+		Connection connection = DriverManager.getConnection(url, user, password);
+		if (!connection.isClosed()) {
+			System.out.println("Succeeded connecting to the Database!");
+			return connection;
+		}
+		return null;
+	}
+	
+	private Connection getConnection() throws SQLException, ClassNotFoundException {
+		if(this.dataSource!=null) {
+			return this.dataSource.getConnection();
+		}else if(this.databaseInfo!=null) {
+			return getConnectionByDatebaseInfo(this.databaseInfo);
+		}
+		return null;
+	}
+	
+	public List<FieldInfo> getTableFields(String tableName) throws SQLException, ClassNotFoundException{
+		String primaryKeyColumnName = null;
+		List<FieldInfo> fieldInfoList = new ArrayList<>();
+		Connection connection = getConnection();
+		Statement statement = connection.createStatement();
+		DatabaseMetaData metaData = connection.getMetaData();
+		//ResultSet tableRet = metaData.getTables(null, "%", tableName, new String[] { "TABLE" });
+		ResultSet colRet = metaData.getColumns(null, "%", tableName, "%");
+		String catalog = connection.getCatalog();
+		ResultSet primaryKeyResultSet = metaData.getPrimaryKeys(catalog, null, tableName);
+		while (primaryKeyResultSet.next()) {
+			primaryKeyColumnName = primaryKeyResultSet.getString("COLUMN_NAME");
+		}
+		while (colRet.next()) {
+			String columnName = colRet.getString("COLUMN_NAME");
+			Integer columnLength = colRet.getInt("COLUMN_SIZE");
+			//String columnType = colRet.getString("TYPE_NAME");
+			String comment = null;
+			String defaultValue = null;
+			boolean isNull = true;
+			//获取字段注释  TODO 根据不同数据库执行不同的获取字段SQL
+			ResultSet rs = statement.executeQuery("show full columns from " + tableName);
+			while (rs.next()) {
+				if (columnName.equals(rs.getString("Field"))) {
+					comment = rs.getString("Comment");
+					String canBeNull = rs.getString("Null");
+					isNull = !"NO".equalsIgnoreCase(canBeNull);
+					defaultValue = rs.getString("Default");
+					break;
+				}
+			}
+			//数据库字段类型
+			int dt = colRet.getInt("DATA_TYPE");
+			String javaType = "String";
+			switch (dt) {
+			case Types.BIGINT:
+				javaType = "Long";
+				break;
+			case Types.INTEGER:
+			case Types.SMALLINT:
+			case Types.TINYINT:
+				javaType = "Integer";
+				break;
+			case Types.FLOAT:
+			case Types.REAL:
+				javaType = "Float";
+				break;
+			case Types.DOUBLE:
+				javaType = "Double";
+				break;
+			case Types.DATE:
+			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				javaType = "Date";
+				break;
+			default:
+				break;
+			}
+			FieldInfo f = new FieldInfo(FieldUtils.camelName(columnName), javaType,columnLength);
+			f.setComment(comment);
+			f.setColumnName(columnName);
+			f.setIsNull(isNull);
+			f.setDefaultValue(defaultValue);
+			if (columnName.equals(primaryKeyColumnName)) {
+				System.out.println("primary Key is "+primaryKeyColumnName);
+				f.setPrimaryKey(true);
+			}
+			fieldInfoList.add(f);
+		}
+		colRet.close();
+		primaryKeyResultSet.close();
+		closeConnection(connection);
+		return fieldInfoList;
+	}
+	
+	private void closeConnection(Connection connection) {
+		try {
+			connection.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				if (connection != null)
+					connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
-	public void generateModel(DatabaseInfo databaseInfo, String modelPackage, String commonPath,
-			EasyAutoModule[] modules,GenetateInfo... genetateInfo) {
+	public boolean generateModel(String modelPackage, String commonPath,
+			EasyAutoModule[] modules,GenerateInfo... genetateInfo) throws ClassNotFoundException {
 		baseControllerImport = commonPath+".controller";
 		javaModuleFolder = basePath + commonPath.replaceAll("\\.", "/");// replace
 		resourcesFolder = basePath + commonPath.replaceAll("\\.", "/") + "/mapper";
-
-		for (GenetateInfo g : genetateInfo) {
+		Connection connection = null;
+		try {
+			connection = getConnection();
+		} catch (ClassNotFoundException | SQLException e) {
+			e.printStackTrace();
+			return false;
+		} 
+		for (GenerateInfo g : genetateInfo) {
 			String tableName = g.getTableName();
-			String modelName = g.getModelName();
-			Map<String, Object> map = new HashMap<>();
-			// 新加代码 =================
 			// 连接数据库获取字段表名=================================================
-			if (databaseInfo != null) {
-				String primaryKeyColumnName = null;
-				// 声明Connection对象
-				Connection con = null;
-				// 驱动程序名
-				String driver = databaseInfo.getDriver();
-				// URL指向要访问的数据库名mydata
-				String url = databaseInfo.getUrl();
-				// MySQL配置时的用户名
-				String user = databaseInfo.getName();
-				// MySQL配置时的密码
-				String password = databaseInfo.getPassword();
-				List<FieldInfo> fieldInfoList = new ArrayList<>();
-				// 遍历查询结果集
-				try {
-					// 加载驱动程序
-					Class.forName(driver);
-					// 1.getConnection()方法，连接MySQL数据库！！
-					con = DriverManager.getConnection(url, user, password);
-					if (!con.isClosed())
-						System.out.println("Succeeded connecting to the Database!");
-					// 2.创建statement类对象，用来执行SQL语句！！
-					Statement statement = con.createStatement();
-					DatabaseMetaData metaData = con.getMetaData();
-					ResultSet tableRet = metaData.getTables(null, "%", tableName, new String[] { "TABLE" });
-					ResultSet colRet = metaData.getColumns(null, "%", tableName, "%");
-					String catalog = con.getCatalog();
-					ResultSet primaryKeyResultSet = metaData.getPrimaryKeys(catalog, null, tableName);
-					while (primaryKeyResultSet.next()) {
-						primaryKeyColumnName = primaryKeyResultSet.getString("COLUMN_NAME");
-					}
-					while (colRet.next()) {
-						String columnName = colRet.getString("COLUMN_NAME");
-						Integer columnLength = colRet.getInt("COLUMN_SIZE");
-						String columnType = colRet.getString("TYPE_NAME");
-						String comment = null;
-						String defaultValue = null;
-						boolean isNull = true;
-						//获取字段注释
-						ResultSet rs = statement.executeQuery("show full columns from " + tableName);
-						while (rs.next()) {
-							if (columnName.equals(rs.getString("Field"))) {
-								comment = rs.getString("Comment");
-								String canBeNull = rs.getString("Null");
-								isNull = !"NO".equalsIgnoreCase(canBeNull);
-								defaultValue = rs.getString("Default");
-								break;
-							}
-						}
-						//数据库字段类型
-						int dt = colRet.getInt("DATA_TYPE");
-						String javaType = "String";
-						switch (dt) {
-						case Types.BIGINT:
-							javaType = "Long";
-							break;
-						case Types.INTEGER:
-						case Types.SMALLINT:
-						case Types.TINYINT:
-							javaType = "Integer";
-							break;
-						case Types.FLOAT:
-						case Types.REAL:
-							javaType = "Float";
-							break;
-						case Types.DOUBLE:
-							javaType = "Double";
-							break;
-						case Types.DATE:
-						case Types.TIMESTAMP:
-						case Types.TIMESTAMP_WITH_TIMEZONE:
-							javaType = "Date";
-							break;
-						default:
-							break;
-						}
-						FieldInfo f = new FieldInfo(FieldUtils.camelName(columnName), javaType,columnLength);
-						f.setComment(comment);
-						f.setColumnName(columnName);
-						f.setIsNull(isNull);
-						f.setDefaultValue(defaultValue);
-						if (columnName.equals(primaryKeyColumnName)) {
-							System.out.println("primary Key is "+primaryKeyColumnName);
-							f.setPrimaryKey(true);
-						}
-						fieldInfoList.add(f);
-					}
-					//将从数据库中查询到的字段信息放入，用于生成Mapper
-					g.setFieldInfos(fieldInfoList);
-					colRet.close();
-					primaryKeyResultSet.close();
-					con.close();
-					
-				} catch (ClassNotFoundException e) {
-					// 数据库驱动类异常处理
-					System.out.println("Sorry,can`t find the Driver!");
-					e.printStackTrace();
-				} catch (SQLException e) {
-					// 数据库连接失败异常处理
-					e.printStackTrace();
-				} catch (Exception e) {
-					// TODO: handle exception
-					e.printStackTrace();
-				} finally {
-					try {
-						if (con != null)
-							con.close();
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-
+			List<FieldInfo> fieldInfoList;
+			try {
+				fieldInfoList = getTableFields(tableName);
+				//将从数据库中查询到的字段信息放入，用于生成Mapper
+				g.setFieldInfos(fieldInfoList);
+			} catch (SQLException e) {
+				e.printStackTrace();
 			}
-			
-//			try {
-//				classs.add(Class.forName(modelPackage+".model."+modelName+".java"));
-//			} catch (ClassNotFoundException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
 		}
+		closeConnection(connection);
 		System.out.println("Start generate...");
 		try {
-			generatorAll(commonPath,modelPackage,modules,genetateInfo);
+			generateByTemplate(commonPath,modelPackage,modules,genetateInfo);
 			System.out.println("Code generation successful! Please refresh your project.");
+			return true;
 		} catch (TemplateException | IOException e) {
 			e.printStackTrace();
 		}
-		
-		// return classs;
-
-		// =======================================分割线============================
+		return false;
 	}
 	
 	/**
@@ -201,8 +230,7 @@ public class MicroSMSCodeGenerator {
 	 * @throws TemplateException
 	 * @throws IOException
 	 */
-	private void generatorAll(String commonPath, String modulePackage, EasyAutoModule[] modules,GenetateInfo... genetateInfo) throws TemplateException, IOException {
-		// TODO
+	private void generateByTemplate(String commonPath, String modulePackage, EasyAutoModule[] modules,GenerateInfo... genetateInfo) throws TemplateException, IOException {
 		String mds = "#";
 		if (modules == null) {
 			mds = "#controller#criteria#dao#mapper#page#service#serviceImpl#";
@@ -224,8 +252,8 @@ public class MicroSMSCodeGenerator {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void generatorFile(String commonPath, String modulePackage,
-			String modules,GenetateInfo... genetateInfo) throws TemplateException, IOException {
-		for (GenetateInfo g : genetateInfo) {
+			String modules,GenerateInfo... genetateInfo) throws TemplateException, IOException {
+		for (GenerateInfo g : genetateInfo) {
 			/* Create a data-model */
 			Map root = new HashMap();
 			// mapper中resultType 包路径
