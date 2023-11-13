@@ -46,9 +46,9 @@ public class SwaggerConfig  implements WebMvcConfigurer{
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("AI管家用户端API")
+                        .title("Shir Boot API")
                         .version("1.0")
-                        .description( "springdoc-openapi文档技术支持")
+                        .description( "springdoc-openapi support")
                         .termsOfService("http://github.com/reinershir")
                         .license(new License().name("Apache 2.0")
                                 .url("http://github.com/reinershir")));

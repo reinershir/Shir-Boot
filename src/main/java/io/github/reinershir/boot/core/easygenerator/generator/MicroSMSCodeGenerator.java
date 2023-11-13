@@ -11,16 +11,18 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.sql.DataSource;
+import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.alibaba.druid.pool.DruidDataSource;
 
@@ -32,6 +34,7 @@ import io.github.reinershir.boot.core.easygenerator.model.DatabaseInfo;
 import io.github.reinershir.boot.core.easygenerator.model.EntityInfo;
 import io.github.reinershir.boot.core.easygenerator.model.FieldInfo;
 import io.github.reinershir.boot.core.easygenerator.model.GenerateInfo;
+import io.github.reinershir.boot.core.easygenerator.utils.DailyFileUtil;
 import io.github.reinershir.boot.core.easygenerator.utils.FieldUtils;
 
 /**
@@ -185,12 +188,30 @@ public class MicroSMSCodeGenerator {
 			}
 		}
 	}
+	
+	public String generateCodeToZip(String modelPackage, String commonPath,
+			EasyAutoModule[] modules,GenerateInfo... genetateInfo) throws Exception{
+		String path = System.getProperty("user.dir") + "/codes/"+new Date().getTime();
+		String generatePath = path+"/";
+		File f = new File(generatePath);
+		if(!f.exists()) {
+			f.mkdirs();
+		}
+		if(generateModel(generatePath, modelPackage, commonPath, modules, genetateInfo)) {
+			String zipPath = path+".zip";
+			DailyFileUtil.doCompress(f, new File(zipPath));
+			return zipPath;
+		}
+		return null;
+	}
 
-	public boolean generateModel(String modelPackage, String commonPath,
+
+	public boolean generateModel(@Nullable String path,String modelPackage, String commonPath,
 			EasyAutoModule[] modules,GenerateInfo... genetateInfo) throws ClassNotFoundException {
 		baseControllerImport = commonPath+".controller";
-		javaModuleFolder = basePath + commonPath.replaceAll("\\.", "/");// replace
-		resourcesFolder = basePath + commonPath.replaceAll("\\.", "/") + "/mapper";
+		String generatePath = StringUtils.hasText(path)?path:basePath;
+		javaModuleFolder = generatePath + commonPath.replaceAll("\\.", "/");// replace
+		resourcesFolder = generatePath + commonPath.replaceAll("\\.", "/") + "/mapper";
 		Connection connection = null;
 		try {
 			connection = getConnection();
