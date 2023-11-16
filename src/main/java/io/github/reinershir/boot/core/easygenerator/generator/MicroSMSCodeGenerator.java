@@ -431,7 +431,7 @@ public class MicroSMSCodeGenerator {
 			if (modules.contains("dao")) {
 				template = cfg.getTemplate("dao.tpl");
 				fileName = className + "Mapper.java";
-				String daoFolder = basePath + commonPath.replaceAll("\\.", "/") + "/mapper/";
+				String daoFolder = javaModuleFolder + "/mapper/";
 				dir = new File(daoFolder);
 				if (!dir.exists()) {
 					dir.mkdirs();

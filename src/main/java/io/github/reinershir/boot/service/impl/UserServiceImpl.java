@@ -43,10 +43,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
 	
 	Logger logger=LoggerFactory.getLogger(this.getClass());
 	
-	
 	@Value(value="${lui-auth.authrizationConfig.administratorId}")
 	String administratorId;
-	
 	
 	/**
 	 * @Title: login

@@ -93,7 +93,6 @@ public class User{
 	 * @Title: 逻辑删除标识
 	 * @Description:   
 	 * @author ReinerShir
-	 * @date 2020年10月20日
 	 * @return
 	 */
 	@TableLogic
