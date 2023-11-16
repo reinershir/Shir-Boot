@@ -4,10 +4,12 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,7 +60,16 @@ public class DevelopmentController {
 	@PostMapping("/codeGenerate/codes")
 	public void generate(@RequestBody @Validated CodeGenerateDTO dto,HttpServletResponse response){
 		GenerateInfo generateInfo = new GenerateInfo(dto.getTableName(),dto.getModelName(),dto.getModelDescription());
-		generateInfo.setFieldInfos(dto.getFieldInfos());
+		if(!CollectionUtils.isEmpty(dto.getFieldInfos())) {
+			List<FieldInfo> list = new ArrayList<>();
+			dto.getFieldInfos().forEach(i->{
+				FieldInfo f= new FieldInfo();
+				f.setColumnName(i.getColumnName());
+				f.setOperation(i.getQueryType());
+				list.add(f);
+			});
+			generateInfo.setFieldInfos(list);
+		}
 		try {
 			// 将生成好的代码打包成ZIP并下载
 			String zipPath = codeGenerator.generateCodeToZip(dto.getPackageName(), dto.getPackageName(), EasyAutoModule.values(),generateInfo);

@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.alibaba.druid.pool.DruidDataSource;
@@ -225,8 +226,24 @@ public class MicroSMSCodeGenerator {
 			List<FieldInfo> fieldInfoList;
 			try {
 				fieldInfoList = getTableFields(tableName);
-				//将从数据库中查询到的字段信息放入，用于生成Mapper
-				g.setFieldInfos(fieldInfoList);
+				if(CollectionUtils.isEmpty(g.getFieldInfos())) {
+					//将从数据库中查询到的字段信息放入，用于生成Mapper
+					g.setFieldInfos(fieldInfoList);
+				}else {
+					//和参数数组组装
+					int begin = 0;
+					for (int i = 0; i < fieldInfoList.size(); i++) {
+						String fieldName = fieldInfoList.get(i).getColumnName();
+						for (int j = begin; j < g.getFieldInfos().size(); j++) {
+							String columnName = g.getFieldInfos().get(j).getColumnName();
+							if(fieldName.equals(columnName)) {
+								fieldInfoList.get(i).setOperation(g.getFieldInfos().get(j).getOperation());
+								begin = ++j;
+								break;
+							}
+						}
+					}
+				}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}

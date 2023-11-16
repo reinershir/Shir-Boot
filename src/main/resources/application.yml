@@ -117,7 +117,7 @@ lui-auth:
   intergrateConfig: 
     enable: true    #Automatic generation of roles and menu tables
   securityConfig:
-    enableRequestLog: false
+    enableRequestLog: true
     bindIp: false
 
   
