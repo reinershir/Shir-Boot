@@ -21,13 +21,18 @@ import lombok.Data;
  @Data
  @TableName("${tableName}")
 public class ${ClassName} {
-
+<#assign annotationGenerator = "io.github.reinershir.boot.core.easygenerator.generator.QueryGenerator"?new() />
 	<#if entityInfo??>
 	<#list entityInfo.fields as item>
+	<#if item.comment??>
 	/**
 	 * ${item.comment}
 	 */
-	<#if item.primaryKey == true>
+	 </#if>
+	<#if item.operation ?? && item.operation != ''>
+	${annotationGenerator.generateAnnotation(item.operation)}
+	</#if>
+	<#if item.isPrimaryKey == true>
 	<#-- ID 注解 -->
 	@TableId(type=IdType.AUTO)
 	@Schema(description = "${ClassName} ID")
@@ -38,7 +43,7 @@ public class ${ClassName} {
 		</#if>
 	</#if>
 	<#-- 不是ID且 字段不能为空 -->
-	<#if item.primaryKey == false && item.isNull == false && item.name != 'createTime'>
+	<#if item.isPrimaryKey == false && item.isNull == false && item.name != 'createTime'>
 		<#if item.defaultValue??>
 	<#-- 如果可为空且有默认值 -->
 	@Schema(description = "${(item.comment!='')?string(item.comment,item.name)}",nullable = true,defaultValue="${item.defaultValue}")
@@ -52,8 +57,8 @@ public class ${ClassName} {
 		</#if>
 	</#if>
 		<#else>
-	<#if item.primaryKey == false>
-	@Schema(description = "${(item.comment!='')?string(item.comment,item.name)}")
+	<#if item.isPrimaryKey == false>
+	@Schema(description = "${(item.comment ?? && item.comment != '')? then(item.comment,item.name)}")
 	</#if>
 	</#if>
 	private ${item.javaType} ${item.name};

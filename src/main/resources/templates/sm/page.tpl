@@ -1,135 +1,251 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@include file="/WEB-INF/content/common/taglib.jsp" %> 
-<script type="text/javascript">
-var ${ClassName}={};
-$(function(){
-	//DataGrid Init
-	var ${ClassName?uncap_first}Datagrid = UI.initDatagrid("#${ClassName?uncap_first}Datagrid",{
-		url: '${ClassName}/getList',
-	    <#if Oid??>idField : "${Oid}",</#if>
-	    onDblClickRow:function(index,row){
-	    	User.editUser();
-	    },
-	    toolbar:"#${ClassName?uncap_first}Toolbar",
-	    <#if contextMenu>menuSelector:'#${ClassName?uncap_first}ContextMenu',</#if>
-	    columns:[[    
-	    	{field:'ck',checkbox:true,title:'<s:message code="label.chkbox"/>'},
-	    	<#if Autos??>
-				<#list Autos as item>
-				<#assign info=item?split("#")>
-					<#if info[4]=="true">
-					{field:'${info[0]}',title:'${info[2]}',width:80,align:'center'}<#if item_has_next>,</#if>
-					</#if>
-				</#list>
-			</#if>
-        ]]
-	});
-
-	//Add
-	${ClassName}.add${ClassName} = function(){
-		UI.addByWindow({
-			title:'${ClsLabel}<s:message code="label.add"/>',
-			windowUrl:"${ClassName}/toAdd",
-			width:600,
-			height:${Autos?size*30},
-			formId:'#form${ClassName}Add',
-			url:'${ClassName}/add',
-			datagrid:${ClassName?uncap_first}Datagrid
-		});
-	}
-
-	//Update
-	${ClassName}.edit${ClassName} = function (){
-		UI.updateByWindow({
-			title:'${ClsLabel}<s:message code="label.edit"/>',
-			windowUrl:"${ClassName}/toEdit", //编辑页面的跳转URL
-			width:600,
-			height:${Autos?size*30},
-			formId:'#form${ClassName}Edit',	//表单ID
-			url:'${ClassName}/update',		//提交表单时的URL
-			datagrid:${ClassName?uncap_first}Datagrid,
-			<#if Oid??>idField : "${Oid}",</#if>			//ID列名,使用getUrl获得数据时才需要
-			getUrl:'${ClassName}/getById'//获得用户信息详情的请求URL
-		});
-	}
-	
-	${ClassName}.delete${ClassName} = function (){
-		UI.deleteByDatagrid(${ClassName?uncap_first}Datagrid, '${ClassName}/delete', "${Oid}");
-	}
-
-	//Search
-	${ClassName}.query${ClassName}List = function (){
-		
-		var parament={};
-		<#if Propertys??>
-		<#list Propertys as item>
-		<#assign info=item?split("#")>
-		var ${info[1]} = $("#${ClassName?uncap_first}${info[1]?cap_first}").val();
-		if(${info[1]}!="")
-			parament["${info[1]}"]=${info[1]};
-		</#list>
-		</#if>
-				
-		${ClassName?uncap_first}Datagrid.datagrid({
-			queryParams:parament
-		});
-	}
-});
-
-</script>
-<div  id="${ClassName?uncap_first}Toolbar" class="toolbar">
-	<form id="search${ClassName}Form" style="padding:10px 10px;" >
-		<table>
-			<tr>
-				
-				<#if Propertys??>
-				<#list Propertys as item>
-				<#assign info=item?split("#")>
-					<td>${info[4]}：</td>
-					<td width="200"><input name="${info[1]}" id="${ClassName?uncap_first}${info[1]?cap_first}" class="easyui-textbox" /></td>
-				</#list>
-				</#if>
-				<#if search>
-				<td>
-				<a class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="${ClassName}.query${ClassName}List()"><s:message code="label.search"></s:message></a>
-				<a class="easyui-linkbutton" iconCls="icon-clear" plain="true" onclick="$('#search${ClassName}Form').form('clear')"><s:message code="label.clear"></s:message></a>
-				</td>
-				</#if>
-			</tr>
-		</table>
-	</form>
-	<#if save>
-	<shiro:hasPermission name="${ClassName}/add">
-		<a href="javascript:void(0)" onclick="${ClassName}.add${ClassName}()" class="easyui-linkbutton" iconCls="icon-add" plain="true"><s:message code="label.add"/></a>
-	</shiro:hasPermission>
-	</#if>
-	<#if update>
-	<shiro:hasPermission name="${ClassName}/update">
-		<a href="javascript:void(0)" onclick="${ClassName}.edit${ClassName}()" class="easyui-linkbutton" iconCls="icon-edit" plain="true"><s:message code="label.edit"/></a>
-	</shiro:hasPermission>	
-	</#if>
-	<#if remove>
-    <shiro:hasPermission name="${ClassName}/delete">
-    	<a href="javascript:void(0)" onclick="${ClassName}.delete${ClassName}()" class="easyui-linkbutton" iconCls="icon-remove" plain="true" ><s:message code="label.delete"/></a>
-    </shiro:hasPermission>  	
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-input v-model="listQuery.nickName" :placeholder="$t('user.hint.nickName')" style="width: 15%; margin-right: 50px;" />
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
+        {{ $t("common.button.search") }}
+      </el-button>
+      <br>
+      <el-button
+        class="filter-item"
+        style="margin:20px 0 20px 0;"
+        type="primary"
+        icon="el-icon-edit"
+        @click="handleCreate()"
+      >
+        {{ $t("common.button.create") }}
+      </el-button>
+    </div>
+    <el-table v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%">
+<#if fieldInfos??>
+	<#list fieldInfos as item>
+    <#if item.isPrimaryKey>
+	  <el-table-column v-if="false" align="center" label="${(item.comment ?? && item.comment != '')? then(item.comment,item.name)}">
+	        <template slot-scope="scope">
+	          <span>{{ scope.row.${item.name} }}</span>
+	        </template>
+	  </el-table-column>
+  	<#else>
+	  <el-table-column align="center" label="${(item.comment ?? && item.comment != '')? then(item.comment,item.name)}">
+	      <template slot-scope="scope">
+	        <span>{{ scope.row.${item.name} }}</span>
+	      </template>
+	  </el-table-column>
     </#if>
-</div>
-<table id="${ClassName?uncap_first}Datagrid"></table>
-<%-- grid右键菜单 --%>
-<div id="${ClassName?uncap_first}ContextMenu" class="easyui-menu" style="width:120px;">
-<#if save>
-<shiro:hasPermission name="${ClassName}/add">
-	<div onclick="${ClassName}.add${ClassName}()" data-options="iconCls:'icon-add'"><s:message code="label.add"/></div>
-</shiro:hasPermission>
+	</#list>
 </#if>
-<#if update>
-<shiro:hasPermission name="${ClassName}/update">
-	<div onclick="${ClassName}.edit${ClassName}()" data-options="iconCls:'icon-edit'"><s:message code="label.edit"/></div>
-</shiro:hasPermission>
+      <el-table-column align="center" :label="$t('common.button.operation')" lign="center" width="260" class-name="small-padding fixed-width">
+        <template slot-scope="{row,$index}">
+          <el-button class="filter-item" type="primary" size="mini" icon="el-icon-edit" @click="handleUpdate(row)">
+            {{ $t('common.button.edit') }}
+          </el-button>
+          <el-button size="small" type="danger" @click="handleDelete(row, $index)">
+            {{ $t('common.button.delete') }}
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      :page.sync="listQuery.page"
+      :limit.sync="listQuery.pageSize"
+      @pagination="getList"
+    />
+
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+      <el-form
+        ref="dataForm"
+        :rules="rules"
+        :model="info"
+        label-position="left"
+        label-width="150px"
+        style="margin-left:50px;"
+      >
+<#if fieldInfos??>
+	<#list fieldInfos as item>
+    <#if item.isPrimaryKey>
+<el-input v-show="false" v-model="info.${item.name}" />
+  	<#else>
+  	<el-form-item prop="${item.name}" label="${(item.comment ?? && item.comment != '')? then(item.comment,item.name)}">
+          <el-input v-model="info.${item.name}" />
+        </el-form-item>
+    </#if>
+	</#list>
 </#if>
-<#if remove>
-<shiro:hasPermission name="${ClassName}/delete">
-	<div onclick="${ClassName}.delete${ClassName}()" data-options="iconCls:'icon-remove'"><s:message code="label.delete"/></div>
-</shiro:hasPermission>
-</#if>
-</div>    
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">
+          {{ $t('common.button.cancel') }}
+        </el-button>
+        <el-button type="primary" @click="dialogStatus === 'create' ? createData() : updateData()">
+          {{ $t('common.button.save') }}
+        </el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { fetchList, create, update, deleteById } from '@/api/${ClassName?uncap_first}'
+import Pagination from '@/components/Pagination'
+
+export default {
+  name: '${ClassName?uncap_first}List',
+  components: { Pagination },
+  filters: {
+    statusFilter(status) {
+      const statusMap = {
+        published: 'success',
+        draft: 'info',
+        deleted: 'danger'
+      }
+      return statusMap[status]
+    }
+  },
+  props: {
+    isEdit: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data() {
+    return {
+      list: null,
+      total: 0,
+      listLoading: true,
+      listQuery: {
+        pageNum: 1,
+        pageSize: 20,
+        nickName: ''
+      },
+      dialogFormVisible: false,
+      dialogVisible: false,
+      dialogStatus: '',
+      textMap: {
+        update: this.$t('common.button.edit'),
+        create: this.$t('common.button.create')
+      },
+      info: {
+  	<#if fieldInfos??>
+	<#list fieldInfos as item>
+      ${item.name}<#if item_has_next>,</#if>
+	</#list>
+	</#if>
+      },
+      rules: {
+      <#if fieldInfos??>
+	  <#list fieldInfos as item>
+	    <#if item.isNull??>
+	    ${item.name}: [{ required: true, message: this.$t('common.hint.input') + '${item.comment ?? ? then(item.name, item.comment)}' }]<#if item_has_next>,</#if>
+	    </#if>
+	  </#list>
+	  </#if>
+      }
+    }
+  },
+  created() {
+    this.getList()
+  },
+  methods: {
+    getList() {
+      this.listLoading = true
+      fetchList(this.listQuery).then(response => {
+        this.list = response.data.records
+        this.total = response.data.total
+        this.listLoading = false
+      })
+    },
+    handleFilter() {
+      this.getList()
+    },
+    resetTemp() {
+      this.info = {
+      }
+    },
+    handleCreate() {
+      this.dialogStatus = 'create'
+      this.dialogFormVisible = true
+      this.$nextTick(() => {
+        this.$refs['dataForm'].clearValidate()
+      })
+      this.resetTemp()
+    },
+    handleUpdate(row) {
+      this.info = Object.assign({}, row) // copy obj
+      this.dialogStatus = 'update'
+      this.dialogFormVisible = true
+      this.showPassword = false
+	  this.$nextTick(() => {
+	    this.$refs['dataForm'].clearValidate()
+	  })
+    },
+    handleDelete(row, index) {
+      this.$confirm(this.$t('common.hint.confirm'), 'Hint', {
+        confirmButtonText: this.$t('common.button.submit'),
+        cancelButtonText: this.$t('common.button.cancel'),
+        type: 'warning'
+      }).then(() => {
+        deleteById(row.id).then(response => {
+          this.$notify({
+            title: 'Success',
+            message: response.message,
+            type: 'success',
+            duration: 2000
+          })
+          this.list.splice(index, 1)
+        })
+      })
+    },
+    createData() {
+      this.$refs['dataForm'].validate((valid) => {
+        if (valid) {
+          create(this.info).then(() => {
+            this.list.unshift(this.info)
+            this.dialogFormVisible = false
+            this.$notify({
+              title: 'Success',
+              message: this.$t('common.hint.success'),
+              type: 'success',
+              duration: 2000
+            })
+            this.getList()
+          })
+        }
+      })
+    },
+    updateData() {
+      this.$refs['dataForm'].validate((valid) => {
+        if (valid) {
+          const listData = JSON.stringify(this.info)
+          update(listData).then((response) => {
+            const index = this.list.findIndex(v => v.id === this.info.id)
+            this.list.splice(index, 1, this.info)
+            this.dialogFormVisible = false
+            this.$notify({
+              title: 'Success',
+              message: response.message,
+              type: 'success',
+              duration: 2000
+            })
+            this.getList()
+          })
+        }
+      })
+    },
+  }
+}
+</script>
+
+<style scoped>
+.edit-input {
+  padding-right: 100px;
+}
+
+.cancel-btn {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+}
+</style>

@@ -14,9 +14,9 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://43.156.78.227:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false
+    url: jdbc:mysql://localhost:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false
     username: root
-    password: paper123456
+    password: 123456
     # 下面为连接池的补充设置，应用到上面所有数据源中
     # 初始化大小，最小，最大
     initialSize: 5
@@ -95,7 +95,7 @@ mybatis-plus:
       logic-delete-field: IS_DELETE  # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
       logic-delete-value: 1 # 逻辑已删除值(默认为 1)
       logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
-  typeAliasesPackage: com.xh.thesis.model
+  typeAliasesPackage: io.github.reinershir.boot.model
 # spring boot集成mybatis的方式打印sql 
   configuration:
     cache: true 

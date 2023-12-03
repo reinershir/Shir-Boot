@@ -55,10 +55,10 @@ public class FieldInfo {
 	public void setColumnName(String columnName) {
 		this.columnName = columnName;
 	}
-	public boolean isPrimaryKey() {
+	public boolean getIsPrimaryKey() {
 		return isPrimaryKey;
 	}
-	public void setPrimaryKey(boolean isPrimaryKey) {
+	public void setIsPrimaryKey(boolean isPrimaryKey) {
 		this.isPrimaryKey = isPrimaryKey;
 	}
 	public String getDefaultValue() {

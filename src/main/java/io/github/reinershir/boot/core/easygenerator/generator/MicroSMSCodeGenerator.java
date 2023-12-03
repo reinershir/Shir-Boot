@@ -107,15 +107,15 @@ public class MicroSMSCodeGenerator {
 		Statement statement = connection.createStatement();
 		DatabaseMetaData metaData = connection.getMetaData();
 		//ResultSet tableRet = metaData.getTables(null, "%", tableName, new String[] { "TABLE" });
-		ResultSet colRet = metaData.getColumns(null, "%", tableName, "%");
 		String catalog = connection.getCatalog();
+		ResultSet resultSet = metaData.getColumns(catalog, "%", tableName, "%");
 		ResultSet primaryKeyResultSet = metaData.getPrimaryKeys(catalog, null, tableName);
 		while (primaryKeyResultSet.next()) {
 			primaryKeyColumnName = primaryKeyResultSet.getString("COLUMN_NAME");
 		}
-		while (colRet.next()) {
-			String columnName = colRet.getString("COLUMN_NAME");
-			Integer columnLength = colRet.getInt("COLUMN_SIZE");
+		while (resultSet.next()) {
+			String columnName = resultSet.getString("COLUMN_NAME");
+			Integer columnLength = resultSet.getInt("COLUMN_SIZE");
 			//String columnType = colRet.getString("TYPE_NAME");
 			String comment = null;
 			String defaultValue = null;
@@ -132,7 +132,7 @@ public class MicroSMSCodeGenerator {
 				}
 			}
 			//数据库字段类型
-			int dt = colRet.getInt("DATA_TYPE");
+			int dt = resultSet.getInt("DATA_TYPE");
 			String javaType = "String";
 			switch (dt) {
 			case Types.BIGINT:
@@ -165,11 +165,11 @@ public class MicroSMSCodeGenerator {
 			f.setDefaultValue(defaultValue);
 			if (columnName.equals(primaryKeyColumnName)) {
 				System.out.println("primary Key is "+primaryKeyColumnName);
-				f.setPrimaryKey(true);
+				f.setIsPrimaryKey(true);
 			}
 			fieldInfoList.add(f);
 		}
-		colRet.close();
+		resultSet.close();
 		primaryKeyResultSet.close();
 		closeConnection(connection);
 		return fieldInfoList;
@@ -251,7 +251,7 @@ public class MicroSMSCodeGenerator {
 		closeConnection(connection);
 		System.out.println("Start generate...");
 		try {
-			generateByTemplate(commonPath,modelPackage,modules,genetateInfo);
+			generateByTemplate(commonPath,modelPackage,generatePath,modules,genetateInfo);
 			System.out.println("Code generation successful! Please refresh your project.");
 			return true;
 		} catch (TemplateException | IOException e) {
@@ -268,7 +268,7 @@ public class MicroSMSCodeGenerator {
 	 * @throws TemplateException
 	 * @throws IOException
 	 */
-	private void generateByTemplate(String commonPath, String modulePackage, EasyAutoModule[] modules,GenerateInfo... genetateInfo) throws TemplateException, IOException {
+	private void generateByTemplate(String commonPath, String modulePackage,String generatePath, EasyAutoModule[] modules,GenerateInfo... genetateInfo) throws TemplateException, IOException {
 		String mds = "#";
 		if (modules == null) {
 			mds = "#controller#criteria#dao#mapper#page#service#serviceImpl#";
@@ -277,7 +277,7 @@ public class MicroSMSCodeGenerator {
 				mds += modules[i].value + "#";
 			}
 		}
-		generatorFile(commonPath,modulePackage, mds,genetateInfo);
+		generatorFile(commonPath,modulePackage,generatePath, mds,genetateInfo);
 	}
 
 	/**
@@ -289,7 +289,7 @@ public class MicroSMSCodeGenerator {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void generatorFile(String commonPath, String modulePackage,
+	private void generatorFile(String commonPath, String modulePackage,String generatePath,
 			String modules,GenerateInfo... genetateInfo) throws TemplateException, IOException {
 		for (GenerateInfo g : genetateInfo) {
 			/* Create a data-model */
@@ -305,81 +305,20 @@ public class MicroSMSCodeGenerator {
 			String table = g.getTableName();
 			String className = g.getModelName();
 
-			// ========== EasyId
-			// 主键ID
-			String oid = null;
-			//主键java属性名
-			String oidColumn = null;
-			String idClassName = null;
-			// ========== EasyId
-
-			// ========== Criteria
 			// 条件属性数据列表
 			Set<String> propertys = new LinkedHashSet<String>();
 			// 需要额外导入的包列表
 			Set<String> imports = new LinkedHashSet<String>();
-			// ========== Criteria
-			// 表格列显示信息
-			Set<String> autos = new LinkedHashSet<String>();
-			//查找主键
-			for (FieldInfo fieldInfo : g.getFieldInfos()) {
-				String fieldName = fieldInfo.getName();
-				if (!fieldName.equals("serialVersionUID")) {
-					if (fieldInfo.isPrimaryKey()) {
-						oid = fieldName;
-						oidColumn = fieldInfo.getColumnName();
-						idClassName=fieldInfo.getJavaType();
-					}
-					
-						
-					//如果为空使用属性名生成 modiffy by xh
-					String label = fieldName;
-					String field = fieldName;
-					String inputField = field;
-					String mybatisColumn = fieldInfo.getColumnName();
-					Integer myBatisLegnth =  fieldInfo.getColumnLength();
-					// field#inputField#label#required#show#inputShow#editable#updateAble
-					/*
-					 * field, 0 inputField, 1 label, 2 required, 3 show, 4
-					 * inputShow, 5 updateAble, 6 inputClass, 7
-					 * mybatisColumn, 8 java type 9
-					 */
-					// TODO
-					autos.add(field + "#" + inputField + "#" + label + "#" + "false" + "#" + "true"
-							+ "#" + "true" + "#" + "true" + "#" + "inputClass" + "#"
-							+ mybatisColumn + "#" + myBatisLegnth + "#" + fieldInfo.getJavaType());
-
-
-					String simpleTypeName = fieldInfo.getJavaType();
-
-					String importPack = simpleTypeName;
-					if (simpleTypeName.equals("Date")) {
-						importPack = "java.util.";
-					}
-
-					// type#field#queryConditionName#like#label
-					// propertys.add("Integer#empno#empno#=");
-					// propertys.add("String#ename#ename#like");
-					// propertys.add("Double#sal#sal#=");
-					// propertys.add("Integer#deptno#dept.deptno#=");
-					propertys.add(importPack + "#" + field + "#" + "queryConditionName" + "#" + "like" + "#" + label);
-					
-				}
-			}
 			//freemarker用变量
 			root.put("table",g.getTableName());
 			root.put("modelDescription",g.getModelDescription());
+			// 表格列显示信息
 			root.put("fieldInfos",g.getFieldInfos());
-			root.put("idClassName", idClassName);
 			root.put("commonPath", commonPath);
 			root.put("pkgName", pkgName);
 			root.put("Imports", imports);
 			root.put("Propertys", propertys);
-			root.put("Oid", oid);
-			root.put("oidColumn", oidColumn);
-			
-			root.put("Autos", autos);
-			root.put("Propertys", propertys);
+
 			root.put("Module", module);
 			root.put("Imports", imports);
 			root.put("ClassName", g.getModelName());
@@ -427,7 +366,6 @@ public class MicroSMSCodeGenerator {
 				template.setAutoFlush(true);
 			}
 
-			// XXXDAO
 			if (modules.contains("dao")) {
 				template = cfg.getTemplate("dao.tpl");
 				fileName = className + "Mapper.java";
@@ -441,7 +379,6 @@ public class MicroSMSCodeGenerator {
 				out.close();
 			}
 
-			// XXXDAO.xml Mapper
 			if (modules.contains("mapper")) {
 				template = cfg.getTemplate("mapper.tpl");
 				fileName = className + "Mapper.xml";
@@ -456,8 +393,6 @@ public class MicroSMSCodeGenerator {
 				out.close();
 			}
 
-			// XXXService
-			
 			if (modules.contains("service")) { 
 				template = cfg.getTemplate("service.tpl");
 				fileName = className + "Service.java"; 
@@ -469,9 +404,7 @@ public class MicroSMSCodeGenerator {
 				out = new FileWriter(criteriaFolder + fileName);
 				template.process(root, out); out.close(); 
 			}
-			 
 
-			// XXXServiceImpl
 			if (modules.contains("serviceImpl")) {
 				template = cfg.getTemplate("serviceImpl.tpl");
 				fileName = className + "ServiceImpl.java";
@@ -485,7 +418,6 @@ public class MicroSMSCodeGenerator {
 				out.close();
 			}
 
-			// XXXAction
 			if (modules.contains("controller")) {
 				template = cfg.getTemplate("controller.tpl");
 				fileName = className + "Controller.java";
@@ -499,10 +431,10 @@ public class MicroSMSCodeGenerator {
 				out.close();
 			}
 			
-			if (modules.contains("dataController")) {
-				template = cfg.getTemplate("dataController.tpl");
-				fileName = className + "Controller.java";
-				criteriaFolder = javaModuleFolder + "/controller/";
+			if (modules.contains("page")) {
+				template = cfg.getTemplate("page.tpl");
+				fileName = className + ".vue";
+				criteriaFolder = generatePath + "/vue/";
 				dir = new File(criteriaFolder);
 				if (!dir.exists()) {
 					dir.mkdirs();
@@ -510,6 +442,17 @@ public class MicroSMSCodeGenerator {
 				out = new FileWriter(criteriaFolder + fileName);
 				template.process(root, out);
 				out.close();
+				//生成api.js
+				criteriaFolder = generatePath+"/vue/api/";
+				dir = new File(criteriaFolder);
+				if (!dir.exists()) {
+					dir.mkdirs();
+				}
+				fileName = className + ".js";
+				FileWriter jsWriter = new FileWriter(criteriaFolder + fileName);
+				template = cfg.getTemplate("api_js.tpl");
+				template.process(root, jsWriter);
+				jsWriter.close();
 			}
 		}
 			
