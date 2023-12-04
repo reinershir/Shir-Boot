@@ -226,16 +226,13 @@ public class MicroSMSCodeGenerator {
 			List<FieldInfo> fieldInfoList;
 			try {
 				fieldInfoList = getTableFields(tableName);
-				if(CollectionUtils.isEmpty(g.getFieldInfos())) {
-					//将从数据库中查询到的字段信息放入，用于生成Mapper
-					g.setFieldInfos(fieldInfoList);
-				}else {
+				if(!CollectionUtils.isEmpty(g.getFieldInfos())) {
 					//和参数数组组装
 					int begin = 0;
 					for (int i = 0; i < fieldInfoList.size(); i++) {
-						String fieldName = fieldInfoList.get(i).getColumnName();
+						String fieldName = fieldInfoList.get(i).getName();
 						for (int j = begin; j < g.getFieldInfos().size(); j++) {
-							String columnName = g.getFieldInfos().get(j).getColumnName();
+							String columnName = g.getFieldInfos().get(j).getName();
 							if(fieldName.equals(columnName)) {
 								fieldInfoList.get(i).setOperation(g.getFieldInfos().get(j).getOperation());
 								begin = ++j;
@@ -244,6 +241,7 @@ public class MicroSMSCodeGenerator {
 						}
 					}
 				}
+				g.setFieldInfos(fieldInfoList);
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -350,6 +348,7 @@ public class MicroSMSCodeGenerator {
 				map.put("modelPackage", modulePackage);
 				map.put("ClassName",modelName);
 				map.put("tableName",table);
+				map.put("generateUtil", new QueryGenerator());
 				System.out.println("Generate Model...");
 				// 生成model
 				// cfg.setDirectoryForTemplateLoading(new File(folder));

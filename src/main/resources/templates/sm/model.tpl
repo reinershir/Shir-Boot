@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import io.github.reinershir.boot.common.ValidateGroups;
+import io.github.reinershir.boot.core.query.annotation.QueryRule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,7 +22,6 @@ import lombok.Data;
  @Data
  @TableName("${tableName}")
 public class ${ClassName} {
-<#assign annotationGenerator = "io.github.reinershir.boot.core.easygenerator.generator.QueryGenerator"?new() />
 	<#if entityInfo??>
 	<#list entityInfo.fields as item>
 	<#if item.comment??>
@@ -30,7 +30,8 @@ public class ${ClassName} {
 	 */
 	 </#if>
 	<#if item.operation ?? && item.operation != ''>
-	${annotationGenerator.generateAnnotation(item.operation)}
+	<#assign anno = generateUtil.generateAnnotation(item.operation)!>
+	${anno}
 	</#if>
 	<#if item.isPrimaryKey == true>
 	<#-- ID 注解 -->

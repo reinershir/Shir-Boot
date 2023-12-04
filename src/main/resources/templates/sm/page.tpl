@@ -1,11 +1,29 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.nickName" :placeholder="$t('user.hint.nickName')" style="width: 15%; margin-right: 50px;" />
-      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
+<#if fieldInfos??>
+    <#assign flag = "false" />
+	<#list fieldInfos as item>
+    <#if item.operation ??>
+      <#assign flag = "true" />
+	  <#if item.javaType == 'String'>
+	<el-input 
+	  <#elseif item.javaType == 'Date'>
+	<el-date-picker type="date"
+	  <#elseif item.javaType == 'Float' || item.javaType == 'Double'>
+	<el-input-number :precision="2" :step="0.1"
+	  <#else>
+	<el-input 
+	  </#if> 	  v-model="listQuery.${item.name}" :placeholder="$t('common.hint.input') + '${(item.comment ?? && item.comment != '')? then(item.comment,item.name)}'" style="width: 15%; margin-right: 50px;" />
+    </#if>
+	</#list>
+	<#if flag == 'true'>
+	<el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         {{ $t("common.button.search") }}
-      </el-button>
-      <br>
+    </el-button>
+    </#if>
+    <br>
+</#if>
       <el-button
         class="filter-item"
         style="margin:20px 0 20px 0;"

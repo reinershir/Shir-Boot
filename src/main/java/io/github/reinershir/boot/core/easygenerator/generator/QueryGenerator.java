@@ -1,8 +1,9 @@
 package io.github.reinershir.boot.core.easygenerator.generator;
 
-public class QueryGenerator implements freemarker.template.TemplateModel{
+public class QueryGenerator{
 
 	public String generateAnnotation(String opreation) {
+		System.out.println(opreation);
 		StringBuffer anno = new StringBuffer("@QueryRule(QueryRuleEnum.");
 		switch(opreation) {
 		case ">":
@@ -17,31 +18,31 @@ public class QueryGenerator implements freemarker.template.TemplateModel{
 		case ">=":
 			anno.append("GE");
 			break;
-		case "IN":
+		case "in":
 			anno.append("IN");
 			break;
-		case "LEFT_LIKE":
+		case "left_like":
 			anno.append("LEFT_LIKE");
 			break;
-		case "RIGHT_LIKE":
+		case "right_like":
 			anno.append("RIGHT_LIKE");
 			break;
-		case "LIKE":
+		case "like":
 			anno.append("LIKE");
 			break;
-		case "IS_NULL":
+		case "is_null":
 			anno.append("EMPTY");
 			break;
-		case "NOT_EMPTY":
+		case "not_empty":
 			anno.append("NOT_EMPTY");
 			break;
 		case "!=":
 			anno.append("NE");
 			break;
-		case "NOT_IN":
+		case "not_in":
 			anno.append("NOT_IN");
 			break;
-		case "HIDDEN":
+		case "hidden":
 			anno.append("HIDDEN");
 			break;
 		}
