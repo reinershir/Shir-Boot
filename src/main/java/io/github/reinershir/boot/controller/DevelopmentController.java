@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.reinershir.auth.annotation.OptionType;
 import io.github.reinershir.auth.annotation.Permission;
+import io.github.reinershir.auth.annotation.PermissionMapping;
 import io.github.reinershir.boot.common.Result;
 import io.github.reinershir.boot.core.easygenerator.generator.EasyAutoModule;
 import io.github.reinershir.boot.core.easygenerator.generator.MicroSMSCodeGenerator;
@@ -36,7 +37,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("development")
 @RestController
 @Tag(description = "Development management",name = "Development management")
-//@PermissionMapping(value="DEVELOPMENT")
+@PermissionMapping(value="DEVELOPMENT")
 public class DevelopmentController {
 	
 	@Autowired

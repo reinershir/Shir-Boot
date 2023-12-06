@@ -4,13 +4,13 @@
   <p>
   </p>
 
-[**English**](README.en.md) | **简体中文** |
+**English** | [**简体中文**](README.md) 
 
 </div>
 
-Shir-Boot快速开发平台，整合了后台管理系统常用功能、国际化、在线代码生成等
+comming soon
 
-### 基于
+### Base on
 
 * Spring boot 3.0
 * Mybatis plus
@@ -22,7 +22,7 @@ Shir-Boot快速开发平台，整合了后台管理系统常用功能、国际�
 * [vue-element-admin](https://github.com/PanJiaChen/vue-element-admin)
 * Jdk 17 +
 
-### 使用
+### Usage
 
 1. 下载源码
 2. 新建自己的包名
