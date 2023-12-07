@@ -19,12 +19,12 @@ public class CodeGenerator {
 
 	public static void main(String[] args) throws Exception{
 		FieldInfo f = new FieldInfo();
-		f.setName("nickName");
+		f.setName("requestUri");
 		f.setOperation("like");
-		GenerateInfo g = new GenerateInfo("user", "User","用户");
+		GenerateInfo g = new GenerateInfo("system_log", "SystemLog","系统日志");
 		g.setFieldInfos(Arrays.asList(f));
 		new MicroSMSCodeGenerator(new DatabaseInfo("jdbc:mysql://localhost:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true",
-				"root","123456","com.mysql.cj.jdbc.Driver")).generateCodeToZip("io.github.reinershir.boot.model", "io.github.reinershir.boot",
+				"root","123456","com.mysql.cj.jdbc.Driver")).generateModel(null,"io.github.reinershir.boot.model", "io.github.reinershir.boot",
 						new EasyAutoModule[]{EasyAutoModule.MODEL,EasyAutoModule.MYBATIS_MAPPER_INTERFACE,EasyAutoModule.SERVICE_INTERFACE,
 								EasyAutoModule.SERVICE_IMPLEMENTS,EasyAutoModule.CONTROLLER_CLASS,EasyAutoModule.PAGE},
 						g);

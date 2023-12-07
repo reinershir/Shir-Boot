@@ -230,11 +230,15 @@ public class MicroSMSCodeGenerator {
 					//和参数数组组装
 					int begin = 0;
 					for (int i = 0; i < fieldInfoList.size(); i++) {
-						String fieldName = fieldInfoList.get(i).getName();
+						FieldInfo selectedFiledInfo = fieldInfoList.get(i);
 						for (int j = begin; j < g.getFieldInfos().size(); j++) {
-							String columnName = g.getFieldInfos().get(j).getName();
-							if(fieldName.equals(columnName)) {
-								fieldInfoList.get(i).setOperation(g.getFieldInfos().get(j).getOperation());
+							FieldInfo current = g.getFieldInfos().get(j);
+							String columnName = current.getName();
+							if(selectedFiledInfo.getName().equals(columnName)) {
+								selectedFiledInfo.setOperation(current.getOperation());
+								if(StringUtils.hasText(current.getComment())) {
+									selectedFiledInfo.setComment(current.getComment());
+								}
 								begin = ++j;
 								break;
 							}

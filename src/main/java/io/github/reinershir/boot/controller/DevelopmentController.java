@@ -58,19 +58,10 @@ public class DevelopmentController {
 
 	@Permission(name = "Code generate",value = OptionType.LIST)
 	@Operation(summary = "Code generate",description = "Generate front-end and back-end codes")
-	@PostMapping("/codeGenerate/codes")
+	@PostMapping("/codeGenerate/codes") 
 	public void generate(@RequestBody @Validated CodeGenerateDTO dto,HttpServletResponse response){
 		GenerateInfo generateInfo = new GenerateInfo(dto.getTableName(),dto.getModelName(),dto.getModelDescription());
-		if(!CollectionUtils.isEmpty(dto.getFieldInfos())) {
-			List<FieldInfo> list = new ArrayList<>();
-			dto.getFieldInfos().forEach(i->{
-				FieldInfo f= new FieldInfo();
-				f.setColumnName(i.getColumnName());
-				f.setOperation(i.getQueryType());
-				list.add(f);
-			});
-			generateInfo.setFieldInfos(list);
-		}
+		generateInfo.setFieldInfos(dto.getFieldInfos());
 		try {
 			// 将生成好的代码打包成ZIP并下载
 			String zipPath = codeGenerator.generateCodeToZip(dto.getPackageName(), dto.getPackageName(), EasyAutoModule.values(),generateInfo);

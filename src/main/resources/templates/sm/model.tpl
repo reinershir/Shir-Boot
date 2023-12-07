@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import io.github.reinershir.boot.common.ValidateGroups;
 import io.github.reinershir.boot.core.query.annotation.QueryRule;
+import io.github.reinershir.boot.core.query.annotation.QueryRuleEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

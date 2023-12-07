@@ -2,7 +2,7 @@ package io.github.reinershir.boot.dto.req;
 
 import java.util.List;
 
-import io.github.reinershir.boot.entity.ColumnInfo;
+import io.github.reinershir.boot.core.easygenerator.model.FieldInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -23,7 +23,7 @@ public class CodeGenerateDTO {
 	private String tableName;
 	
 	@Schema(description="fields")
-	private List<ColumnInfo> fieldInfos;
+	private List<FieldInfo> fieldInfos;
 	
 	@NotBlank(message = "model description can not be null")
 	@Schema(description="model description")
