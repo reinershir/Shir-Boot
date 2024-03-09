@@ -21,7 +21,7 @@ public class CodeGenerator {
 		FieldInfo f = new FieldInfo();
 		f.setName("requestUri");
 		f.setOperation("like");
-		GenerateInfo g = new GenerateInfo("system_log", "SystemLog","系统日志");
+		GenerateInfo g = new GenerateInfo("dictionary", "Dictionary","dictionary");
 		g.setFieldInfos(Arrays.asList(f));
 		new MicroSMSCodeGenerator(new DatabaseInfo("jdbc:mysql://localhost:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true",
 				"root","123456","com.mysql.cj.jdbc.Driver")).generateModel(null,"io.github.reinershir.boot.model", "io.github.reinershir.boot",

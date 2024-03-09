@@ -52,6 +52,7 @@ public class ${ClassName}Controller extends BaseController{
 	@Autowired
 	private ${ClassName}Service ${ClassName?uncap_first}Service;
 	
+	@Permission(name = "${modelDescription}<@messages code='doc.api.description.list'/>",value = OptionType.LIST)
 	@Operation(summary="${modelDescription}<@messages code='doc.api.description.list'/>", description = "${modelDescription}<@messages code='doc.api.description.list'/>")
 	@Parameters({
 		@Parameter(name="pageNo",description="Now page",required = true,in = ParameterIn.QUERY),

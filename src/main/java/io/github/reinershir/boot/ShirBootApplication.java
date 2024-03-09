@@ -16,8 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @CrossOrigin
 @EnableTransactionManagement
-@SpringBootApplication(scanBasePackages = {"io.github.reinershir.boot"})
-@MapperScan(value = "io.github.reinershir.boot.mapper")
+@SpringBootApplication(scanBasePackages = {"io.github.reinershir"})
+@MapperScan(value = {"io.github.reinershir.boot.mapper","io.github.reinershir.ai.mapper"})
 @EnableAuthentication
 @Slf4j
 public class ShirBootApplication {
