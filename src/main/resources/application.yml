@@ -143,8 +143,3 @@ knife4j:
   setting:
     language: zh_cn
     
-thirdParty:
-  feishu:
-    appId: cli_a6a779e0349ad00c
-    appSecret: wJv4wVwTUIiWfcBrxhl2kepAnEOOzkz1
-    encryptKey: 7GzAy1gaiWX7ySCoXD2dEfwkbf6p6WIb
