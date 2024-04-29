@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `DICTIONARY` (
 
 -- 正在导出表  shir-boot.dictionary 的数据：~2 rows (大约)
 INSERT INTO `DICTIONARY` (`ID`, `NAME`, `CODE`, `VALUE`, `TYPE`) VALUES
-	(1, 'OPENAI_API_KEY', 'OPENAI_API_KEY', '', 'SYSTEM'),
+	
 	(2, 'OPENAI_REQUEST_TIMEOUT', 'OPENAI_REQUEST_TIMEOUT', '30', 'SYSTEM');
 
 -- 导出  表 shir-boot.MASK 结构
