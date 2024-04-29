@@ -21,7 +21,7 @@ import lombok.Data;
  *
  */
  @Data
- @TableName("dictionary")
+ @TableName("DICTIONARY")
 public class Dictionary {
 	/**
 	 * 
@@ -55,7 +55,7 @@ public class Dictionary {
 	/**
 	 * code type fill in system or custom
 	 */
-	@Schema(description = "code type fill in system or custom",nullable = true,defaultValue="SYSTEM")
+	@Schema(description = "code type fill in SYSTEM or CUSTOM",nullable = true,defaultValue="SYSTEM")
 	private String type;
 	
 	

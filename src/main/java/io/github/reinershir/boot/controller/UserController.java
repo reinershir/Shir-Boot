@@ -75,7 +75,7 @@ public class UserController extends BaseController{
 		User user = userService.login(loginDTO.getLoginName(), loginDTO.getPassword());
 		if(user==null) {
 			return Result.failed(IMessager.getInstance().getMessage("message.notmatch"));
-		}	
+		}
 		LoginRespDTO resp = new LoginRespDTO();
 		resp.setAccessToken(user.getPassword());
 		resp.setId(user.getId());

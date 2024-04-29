@@ -17,6 +17,7 @@ spring:
     url: jdbc:mysql://localhost:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: 123456
+    # password: Xh123456!
     # 下面为连接池的补充设置，应用到上面所有数据源中
     # 初始化大小，最小，最大
     initialSize: 5
@@ -99,6 +100,7 @@ mybatis-plus:
 # spring boot集成mybatis的方式打印sql 
   configuration:
     cache: true 
+    mapUnderscoreToCamelCase: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 logging: 
   level: 
@@ -133,10 +135,16 @@ springdoc:
   group-configs:
     - group: 'default'
       paths-to-match: '/**'
-      packages-to-scan: io.github.reinershir.boot
+      packages-to-scan: io.github.reinershir
   default-flat-param-object: true
       
 knife4j:
   enable: true
   setting:
     language: zh_cn
+    
+thirdParty:
+  feishu:
+    appId: cli_a6a779e0349ad00c
+    appSecret: wJv4wVwTUIiWfcBrxhl2kepAnEOOzkz1
+    encryptKey: 7GzAy1gaiWX7ySCoXD2dEfwkbf6p6WIb

@@ -230,13 +230,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
 				user.setPassword(getEncodingString(user.getLoginName(),newPassword));
 				user.setUpdateDate(new Date());
 				if(baseMapper.updateById(user)>0) {
-					return Result.ok("修改成功！");
+					return Result.ok();
 				}
 			}else {
-				return Result.failed("原密码不正确！");
+				return Result.failed(IMessager.getInstance().getMessage("message.user.unmatchPassword"));
 			}
 		} 
-		return Result.failed("修改失败");
+		return Result.failed();
 	}
 	
 	/**

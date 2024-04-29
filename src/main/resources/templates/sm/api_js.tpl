@@ -2,9 +2,9 @@ import request from '@/utils/request'
 
 export function fetchList(data) {
   return request({
-    url: '/${ClassName?uncap_first}/list',
+    url: '/${ClassName?uncap_first}',
     method: 'get',
-    data
+    params: data
   })
 }
 

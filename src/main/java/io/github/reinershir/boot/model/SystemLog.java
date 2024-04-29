@@ -21,7 +21,7 @@ import lombok.Data;
  *
  */
  @Data
- @TableName("system_log")
+ @TableName("SYSTEM_LOG")
 public class SystemLog {
 	/**
 	 * 

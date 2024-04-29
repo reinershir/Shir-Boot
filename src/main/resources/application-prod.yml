@@ -2,10 +2,10 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false
+    url: jdbc:mysql://172.18.0.3:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     # &allowPublicKeyRetrieval=true
-    password: 123
+    password: Xh123456
     # 下面为连接池的补充设置，应用到上面所有数据源中
     # 初始化大小，最小，最大
     initialSize: 5
@@ -34,20 +34,21 @@ spring:
       # 合并多个DruidDataSource的监控数据
     #useGlobalDataSourceStat: true
 
-  redis:
-    database: 0
-    host: 172.26.60.169
-    port: 6379
-    password: 123
-    # 连接超时时间（毫秒）
-    timeout: 3000
-    pool:
-      # 连接池最大连接数（使用负值表示没有限制）
-      max-active: 32
-      # 连接池中的最大空闲连接
-      max-idle: 8
-      # 连接池中的最小空闲连接
-      min-idle: 4
+  data:
+    redis:
+      database: 0
+      host: 172.18.0.2
+      port: 6379
+      password: 123456
+      # 连接超时时间（毫秒）
+      timeout: 3000
+      pool:
+        # 连接池最大连接数（使用负值表示没有限制）
+        max-active: 32
+        # 连接池中的最大空闲连接
+        max-idle: 8
+        # 连接池中的最小空闲连接
+        min-idle: 4
 
 logging:
   #  level:
@@ -58,6 +59,19 @@ logging:
   file:
     name: ./logs/${spring.application.name}-log.log
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+    enabled: false
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: io.github.reinershir
+  default-flat-param-object: false
 
 
 alipay:

@@ -1,31 +1,36 @@
 package io.github.reinershir.ai.websocket.listener;
+import java.util.Objects;
+
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.Objects;
-
-/**
- * 描述：OpenAIEventSourceListener
- *
- * @author https:www.unfbx.com
- * @date 2023-02-22
- */
 @Slf4j
 public class OpenAISSEEventSourceListener extends EventSourceListener {
 
     private long tokens;
 
     private SseEmitter sseEmitter;
+    private StringBuffer sb;
+    private OpenAISSECallback callback;
 
     public OpenAISSEEventSourceListener(SseEmitter sseEmitter) {
         this.sseEmitter = sseEmitter;
+        sb = new StringBuffer();
+    }
+    
+    public OpenAISSEEventSourceListener(SseEmitter sseEmitter,OpenAISSECallback callback) {
+        this.sseEmitter = sseEmitter;
+        sb = new StringBuffer();
+        this.callback = callback; 
     }
 
     /**
@@ -33,7 +38,7 @@ public class OpenAISSEEventSourceListener extends EventSourceListener {
      */
     @Override
     public void onOpen(EventSource eventSource, Response response) {
-        log.info("OpenAI建立sse连接...");
+        log.info("OpenAI sse connected...");
     }
 
     /**
@@ -42,10 +47,10 @@ public class OpenAISSEEventSourceListener extends EventSourceListener {
     @SneakyThrows
     @Override
     public void onEvent(EventSource eventSource, String id, String type, String data) {
-        log.info("OpenAI返回数据：{}", data);
+        // log.info("OpenAI repond：{}", data);
         tokens += 1;
         if (data.equals("[DONE]")) {
-            log.info("OpenAI返回数据结束了");
+            log.info("response done ：{}",sb.toString());
             sseEmitter.send(SseEmitter.event()
                     .id("[TOKENS]")
                     .data("<br/><br/>tokens：" + tokens())
@@ -55,18 +60,27 @@ public class OpenAISSEEventSourceListener extends EventSourceListener {
                     .data("[DONE]")
                     .reconnectTime(3000));
             // 传输完成后自动关闭sse
-            sseEmitter.complete();
+            // sseEmitter.complete();   //可视情况关闭
+            if(callback!=null) {
+            	//run callback to save messages
+            	this.callback.sseCompleteCallback(sb);
+            }
+            sb=null;
             return;
         }
         ObjectMapper mapper = new ObjectMapper();
         ChatCompletionResponse completionResponse = mapper.readValue(data, ChatCompletionResponse.class); // 读取Json
         try {
+        	String content = completionResponse.getChoices().get(0).getDelta().getContent();
+        	if(content!=null) {
+        		sb.append(content);
+        	}
             sseEmitter.send(SseEmitter.event()
                     .id(completionResponse.getId())
                     .data(completionResponse.getChoices().get(0).getDelta())
                     .reconnectTime(3000));
         } catch (Exception e) {
-            log.error("sse信息推送失败！");
+            log.error("sse send falied！");
             eventSource.cancel();
             e.printStackTrace();
         }

@@ -42,7 +42,7 @@ public interface ChatGPTService {
     *---------------------------------------------------------*
     * 2024年2月25日   ReinerShir       v1.0.0             
      */
-    public void chatCompletions(WebRequestMessage request, String openId,@Nullable String model,SseEmitter sseEmitter);
+    public void chatCompletions(WebRequestMessage request, String openId,SseEmitter sseEmitter,Long userId);
     
     public void completions(String question,@Nullable String model);
     
@@ -67,4 +67,6 @@ public interface ChatGPTService {
     public String getFileContent(String fileId) throws IOException ;
     
     public FineTuneDeleteResponse deleteFineTuneModel(String model);
+    
+    public void updateApiKeys(String apiKey);
 }

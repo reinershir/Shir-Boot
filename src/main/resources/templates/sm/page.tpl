@@ -134,9 +134,20 @@ export default {
       total: 0,
       listLoading: true,
       listQuery: {
-        pageNum: 1,
+        page: 1,
         pageSize: 20,
-        nickName: ''
+<#if fieldInfos??>
+    <#assign flag = "false" />
+	<#list fieldInfos as item>
+	    ${item.name}: null,
+	</#list>
+	<#if flag == 'true'>
+	<el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
+        {{ $t("common.button.search") }}
+    </el-button>
+    </#if>
+    <br>
+</#if>
       },
       dialogFormVisible: false,
       dialogVisible: false,
@@ -148,7 +159,7 @@ export default {
       info: {
   	<#if fieldInfos??>
 	<#list fieldInfos as item>
-      ${item.name}<#if item_has_next>,</#if>
+        ${item.name}: null<#if item_has_next>,</#if>
 	</#list>
 	</#if>
       },
@@ -156,7 +167,7 @@ export default {
       <#if fieldInfos??>
 	  <#list fieldInfos as item>
 	    <#if item.isNull??>
-	    ${item.name}: [{ required: true, message: this.$t('common.hint.input') + '${item.comment ?? ? then(item.name, item.comment)}' }]<#if item_has_next>,</#if>
+	      ${item.name}: [{ required: true, message: this.$t('common.hint.input') + '${item.comment ?? ? then(item.name, item.comment)}' }]<#if item_has_next>,</#if>
 	    </#if>
 	  </#list>
 	  </#if>

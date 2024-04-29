@@ -2,7 +2,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false
+    url: jdbc:mysql://172.19.0.5:3306/shir-boot?allowMultiQueries=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false
     username: root
     password: 123456
     # 下面为连接池的补充设置，应用到上面所有数据源中
@@ -32,20 +32,21 @@ spring:
       slowSqlMillis: 5000
       # 合并多个DruidDataSource的监控数据
     #useGlobalDataSourceStat: true
-  redis:
-    database: 0
-    host: localhost
-    port: 6379
-    password: 123456
-    # 连接超时时间（毫秒）
-    timeout: 3000
-    pool:
-    # 连接池最大连接数（使用负值表示没有限制）
-      max-active: 32
-      # 连接池中的最大空闲连接
-      max-idle: 8
-      # 连接池中的最小空闲连接
-      min-idle: 4
+  data: 
+    redis:
+      database: 0
+      host: 172.19.0.3
+      port: 6379
+      password: 123456
+      # 连接超时时间（毫秒）
+      timeout: 3000
+      pool:
+      # 连接池最大连接数（使用负值表示没有限制）
+        max-active: 32
+        # 连接池中的最大空闲连接
+        max-idle: 8
+        # 连接池中的最小空闲连接
+        min-idle: 4
     
 logging: 
 #  level: 

@@ -1,6 +1,7 @@
-package io.github.reinershir.boot.controller;
+package io.github.reinershir.ai.controller;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import io.github.reinershir.ai.model.Mask;
+import io.github.reinershir.ai.service.MaskService;
 import io.github.reinershir.auth.annotation.OptionType;
 import io.github.reinershir.auth.annotation.Permission;
 import io.github.reinershir.auth.annotation.PermissionMapping;
@@ -27,9 +30,6 @@ import io.github.reinershir.boot.common.BaseController;
 import io.github.reinershir.boot.common.Result;
 import io.github.reinershir.boot.common.ValidateGroups;
 import io.github.reinershir.boot.core.query.QueryHelper;
-import io.github.reinershir.boot.model.Dictionary;
-import io.github.reinershir.boot.service.DictionaryService;
-import io.github.reinershir.boot.service.listener.DictionaryListenerHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -38,69 +38,65 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 
  /**
- * Dictionary Controller Generate by Shir-boot
+ * Mask Controller Generate by Shir-boot
  * @author Shir-Boot
- * @Date 2024年1月20日 下午4:56:15
+ * @Date 2024年4月17日 上午10:40:16
  * @version 1.0
  *
  */
 @RestController
-@RequestMapping("dictionary")
-@Tag(description = "dictionary management",name = "dictionary")
-@PermissionMapping(value="DICTIONARY")
-public class DictionaryController extends BaseController{
+@RequestMapping("mask")
+@Tag(description = "mask管理模块",name = "mask")
+@PermissionMapping(value="MASK")
+public class MaskController extends BaseController{
  
 	@Autowired
-	private DictionaryService dictionaryService;
-	@Autowired
-	DictionaryListenerHandler dictionaryListenerHandler;
+	private MaskService maskService;
 	
-	@Permission(name = "dictionary list",value = OptionType.LIST)
-	@Operation(summary="dictionary list", description = "dictionary list")
+	@Permission(name = "mask列表",value = OptionType.LIST)
+	@Operation(summary="mask列表", description = "mask列表")
 	@Parameters({
 		@Parameter(name="pageNo",description="Now page",required = true,in = ParameterIn.QUERY),
 		@Parameter(name="pageSize",description="Page size",required = true,in = ParameterIn.QUERY),
 	})
 	@GetMapping
-	public Result<IPage<Dictionary>> queryPageList(Dictionary entity,
+	public Result<IPage<Mask>> queryPageList(Mask entity,
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize) {
-		QueryWrapper<Dictionary> queryWrapper = QueryHelper.initQueryWrapper(entity);
-		Page<Dictionary> page = new Page<Dictionary>(pageNo, pageSize);
-		IPage<Dictionary> pageList = dictionaryService.page(page, queryWrapper);
+		QueryWrapper<Mask> queryWrapper = QueryHelper.initQueryWrapper(entity);
+		Page<Mask> page = new Page<Mask>(pageNo, pageSize);
+		IPage<Mask> pageList = maskService.page(page, queryWrapper);
 		return Result.ok(pageList);
 	}
 	 
 	@ResponseStatus(code = HttpStatus.CREATED)
-	@Permission(name = "save dictionary",value = OptionType.ADD)
-	@Operation(summary = "savedictionary",description = "保存dictionary")
+	@Permission(name = "保存mask",value = OptionType.ADD)
+	@Operation(summary = "保存mask",description = "保存mask")
 	@PostMapping
-	public Result<Dictionary> saveDictionary(@Validated(value = ValidateGroups.AddGroup.class) @RequestBody Dictionary entity){
-		if(dictionaryService.save(entity)) {
+	public Result<Mask> saveMask(@Validated(value = ValidateGroups.AddGroup.class) @RequestBody Mask entity){
+		entity.setCreateTime(new Date());
+		if(maskService.save(entity)) {
 			return Result.ok();
 		}
 		return Result.failed();
 	} 
 	
-	@Permission(name = "update dictionary",value = OptionType.UPDATE)
-	@Operation(summary = "update dictionary",description = "update dictionary")
+	@Permission(name = "修改mask",value = OptionType.UPDATE)
+	@Operation(summary = "修改mask",description = "修改mask")
 	@PutMapping
-	public Result<Dictionary> updateDictionary(@Validated(value = ValidateGroups.UpdateGroup.class) @RequestBody Dictionary entity){
-		if(dictionaryService.updateById(entity)) {
-			if("SYSTEM".equals(entity.getType())){
-				dictionaryListenerHandler.runListeners(entity);
-			}
+	public Result<Mask> updateMask(@Validated(value = ValidateGroups.UpdateGroup.class) @RequestBody Mask entity){
+		if(maskService.updateById(entity)) {
 			return Result.ok();
 		}
 		return Result.failed();
 	}
 	
-	@Permission(name = "delete dictionary",value = OptionType.DELETE)
-	@Parameter(name = "id",description = "dictionary ID",required = true)
-	@Operation(summary = "delete dictionary",description = "delete dictionary")
+	@Permission(name = "删除mask",value = OptionType.DELETE)
+	@Parameter(name = "id",description = "mask ID",required = true)
+	@Operation(summary = "删除mask",description = "删除mask")
 	@DeleteMapping("/{id}")
-	public Result<Dictionary> delete(@PathVariable("id") Serializable id){
-		if(dictionaryService.removeById(id)) {
+	public Result<Mask> delete(@PathVariable("id") Serializable id){
+		if(maskService.removeById(id)) {
 			return Result.ok();
 		}
 		return Result.failed();

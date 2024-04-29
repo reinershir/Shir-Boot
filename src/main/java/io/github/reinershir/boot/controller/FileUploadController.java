@@ -2,6 +2,7 @@ package io.github.reinershir.boot.controller;
 
 import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,11 +11,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.unfbx.chatgpt.entity.files.UploadFileResponse;
-
-import io.github.reinershir.ai.controller.GPTModelController;
 import io.github.reinershir.boot.common.Result;
-import io.github.reinershir.boot.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping({"files"})
 @Slf4j
 public class FileUploadController {
+	
+	@Value("${spring.profiles.active}") 
+	String profiles;
 
 	@PostMapping("upload")
 	@Operation(summary = "Upload single file", description = "Upload single file")
 	public Result<String> uploadFile(@RequestPart @RequestParam("file") MultipartFile file) throws Exception {
 		String fileName = file.getOriginalFilename();
-		String path = System.getProperty("user.dir")+"/file/"+new Date().getTime()+"/"+fileName;
+		String path = (profiles.equals("test")?"/root/shir/":System.getProperty("user.dir"))+"/file/"+new Date().getTime()+"/"+fileName;
 		java.io.File f = new java.io.File(path);
 		try {
 			if(!f.exists()) {
@@ -51,7 +51,7 @@ public class FileUploadController {
 		if(files == null || files.length<1) {
 			return Result.failed();
 		}
-		String path = System.getProperty("user.dir")+"/file/"+(StringUtils.hasText(requestId)?requestId:new Date().getTime())+"/";
+		String path = (profiles.equals("test")?"/root/shir/":System.getProperty("user.dir"))+"/file/"+(StringUtils.hasText(requestId)?requestId:new Date().getTime())+"/";
 		for (MultipartFile file : files) {
 			String fileName = file.getOriginalFilename();
 			String filePath = path + fileName;
