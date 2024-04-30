@@ -72,7 +72,7 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
     		DictionaryListenerHandler dictionaryListenerHandler,@Value("${spring.profiles.active}") String profiles) {
     	this.dictionaryListenerHandler = dictionaryListenerHandler;
     	this.messageHepler=messageHepler;
-    	this.model="gpt-3.5-turbo";
+    	this.model="gpt-3.5-turbo-0613";
     	int reqTimeout = Integer.parseInt(dictionaryService.getValueByCode(DictionaryCodes.OPENAI_REQUEST_TIMEOUT));
     	String apiKey = dictionaryService.getValueByCode(DictionaryCodes.OPENAI_API_KEY);
     	List<String> apiKeys;
@@ -115,16 +115,14 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
     }
     
     public String chat(String prompt,String openId,String model){
-       
-        
+    	model = StringUtils.hasText(model)?model:this.model;
         List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model);
-        
         //最新GPT-3.5-Turbo模型
         Message message = Message.builder().role(Message.Role.USER).content(prompt).build();
         allMessage.add(message);
         log.info("发送问题：{}，openId:{}",JSON.toJSONString(message),openId);
         log.info("附带的历史记录：{}",JSON.toJSONString(allMessage));
-        ChatCompletion chatCompletion = ChatCompletion.builder().model(StringUtils.hasText(model)?model:this.model)
+        ChatCompletion chatCompletion = ChatCompletion.builder().model(model)
         		.messages(allMessage).build();
         ChatCompletionResponse chatCompletionResponse = openAiClient.chatCompletion(chatCompletion);
         StringBuffer sb = new StringBuffer();
