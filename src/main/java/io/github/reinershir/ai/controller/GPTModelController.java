@@ -24,6 +24,9 @@ import com.unfbx.chatgpt.entity.fineTune.job.FineTuneJobListResponse;
 import com.unfbx.chatgpt.entity.fineTune.job.FineTuneJobResponse;
 
 import io.github.reinershir.ai.service.ChatGPTService;
+import io.github.reinershir.auth.annotation.OptionType;
+import io.github.reinershir.auth.annotation.Permission;
+import io.github.reinershir.auth.annotation.PermissionMapping;
 import io.github.reinershir.boot.common.Result;
 import io.github.reinershir.boot.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Schema(description =  "ChatGPT Model请求接口")
 @RequestMapping({"/gpt/models"})
 @Slf4j
+@PermissionMapping("GPTMODEL")
 public class GPTModelController {
 
 	@Autowired
@@ -45,6 +49,7 @@ public class GPTModelController {
 		return Result.ok(chatGPTService.getModelFileList());
 	}
 
+	@Permission(value=OptionType.LOGIN)
 	@GetMapping
 	@Operation(summary = "获取模型列表", description = "获取模型列表")
 	public Result<List<com.unfbx.chatgpt.entity.models.Model>> getModelList() {

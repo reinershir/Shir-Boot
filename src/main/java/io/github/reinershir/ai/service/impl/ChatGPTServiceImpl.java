@@ -111,6 +111,7 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
 				        //.keyStrategy(new KeyRandomStrategy())
 				        .okHttpClient(httpClient)
 				        .build();
+    	//监听字典变更事件
     	dictionaryListenerHandler.addListener(DictionaryCodes.OPENAI_API_KEY.name(), new ApikeyUpdateListener(this));
     }
     
@@ -199,7 +200,7 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
 
 	@Override
 	public FineTuneJobResponse createFineTuning(String fileId) {
-		FineTuneJob fineTune = FineTuneJob.builder().trainingFile(fileId).model("gpt-3.5-turbo").build();
+		FineTuneJob fineTune = FineTuneJob.builder().trainingFile(fileId).model(this.model).build();
 		return openAiClient.fineTuneJob(fineTune);
 	}
 
@@ -288,7 +289,8 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
 	
 	private void saveChatHistory(WebRequestMessage request,StringBuffer message,Long userId,List<Message> allMessage) {
 		allMessage.add(Message.builder().role(Message.Role.SYSTEM).content(message.toString()).build());
-		int tokenCount = TikTokensUtil.tokens(request.getModel(), allMessage);
+		//尚不支持gpt-4o计算方式
+		int tokenCount = TikTokensUtil.tokens(request.getModel().toLowerCase().equals("gpt-4o")?"gpt-4":request.getModel(),allMessage);
 		chatHistoryService.save(new ChatHistory(request.getPrompt(), message.toString(), request.getMask(), userId,Float.valueOf(tokenCount),request.getSessionId(), new Date()));
 	}
 

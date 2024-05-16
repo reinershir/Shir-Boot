@@ -52,6 +52,9 @@ import io.github.reinershir.ai.tools.Decrypt;
 import io.github.reinershir.ai.tools.wechat.AesException;
 import io.github.reinershir.ai.tools.wechat.WXBizMsgCrypt;
 import io.github.reinershir.ai.tools.wechat.XMLParse;
+import io.github.reinershir.auth.annotation.OptionType;
+import io.github.reinershir.auth.annotation.Permission;
+import io.github.reinershir.auth.annotation.PermissionMapping;
 import io.github.reinershir.auth.core.support.AuthorizeManager;
 import io.github.reinershir.auth.entity.TokenInfo;
 import io.github.reinershir.boot.common.Result;
@@ -64,6 +67,7 @@ import lombok.extern.slf4j.Slf4j;
 @Schema(description =  "ChatGPT请求接口")
 @RequestMapping({"/gpt/chat"})
 @Slf4j
+@PermissionMapping("AICHAT")
 public class ChatController {
 
 	@Autowired
@@ -92,18 +96,21 @@ public class ChatController {
 	@Value("${thirdParty.wechat.corpid}")
 	private String corpid;
 	
+	@Permission(value = OptionType.SKIP)
 	@ResponseBody
 	@Operation(summary = "请求chatGPT对话（单次）", description = "请求chatGPT对话（单次）")
 	@GetMapping("")
 	public Result<String> askOne(@RequestParam("question") String question,HttpServletRequest request){
-		return Result.ok(chatGPTService.chat(question, request.getSession().getId(), "gpt-3.5-Trube"));
+		return Result.ok(chatGPTService.chat(question, request.getSession().getId(),null));
 	}
 	
+	@Permission(value = OptionType.LOGIN)
 	@ResponseBody
 	@Operation(summary = "connect chatGPT server", description = "connect chatGPT server")
 	@GetMapping(value="connect",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	public SseEmitter connect( HttpServletRequest request) {
-		String token = request.getHeader("Access-Token");
+		String token = authorizeManager.getTokenInfo(request).getUserId();
+		//String token = request.getHeader("Access-Token");
 		//默认30秒超时,设置为0L则永不超时
         SseEmitter sseEmitter = new SseEmitter(0l);
         sseEmitter.onError(
@@ -130,15 +137,18 @@ public class ChatController {
         return sseEmitter;
 	}
 	
+	@Permission(value = OptionType.ALL)
 	@ResponseBody
 	@Operation(summary = "OPENAI chatGPT stream", description = "OPENAI chatGPT stream")
 	@PostMapping
 	public Result<String> chat(@RequestBody WebRequestMessage requestDTO,HttpServletRequest request){
-		String token = request.getHeader("Access-Token");
+		String token = authorizeManager.getTokenInfo(request).getUserId();
+		//String token = request.getHeader("Access-Token");
 		SseEmitter sseEmitter = cache.get(token);
 		log.info("sse =======================> {}",sseEmitter);
 		if(sseEmitter==null) {
 			log.warn("无法获取到sse对象，TOKEN:{}",token);
+			return Result.failed("connect falied");
 		}
 		TokenInfo tokenInfo = authorizeManager.getTokenInfo(request);
 		Long userId = null;
@@ -160,6 +170,7 @@ public class ChatController {
 	/**
      * 功能描述: 用户提问OpenAi，返回答案
      */
+	@Permission(value = OptionType.SKIP)
 	@ResponseBody
     @Operation(summary = "feishu提问接口", description = "feishu提问接口")
     @RequestMapping(path = "/pull/message", method = RequestMethod.POST)
@@ -327,6 +338,7 @@ public class ChatController {
     *---------------------------------------------------------*
     * 2024年4月30日   ReinerShir       v1.0.0              修改原因
      */
+    @Permission(value = OptionType.SKIP)
     @ResponseBody
     @RequestMapping(value="wechat",produces = MediaType.TEXT_XML_VALUE)
     public String wechat(@RequestBody(required = false) String xml, @RequestParam("msg_signature") String msg_signature,@RequestParam("timestamp") String timestamp,
@@ -369,7 +381,7 @@ public class ChatController {
 	        String responseXml = XmlUtil.mapToXmlStr(map,true);
 	        //加密返回内容
 	        String sEncryptMsg = wxcpt.EncryptMsg(responseXml, timestamp, nonce);
-	        log.info("最终返回加密内容：{}",sEncryptMsg);
+	        log.debug("最终返回加密内容：{}",sEncryptMsg);
 	        return sEncryptMsg;
     	} catch (Exception e) {
 			log.error("处理企业微信提交接口出错：{}",e.getMessage(),e);

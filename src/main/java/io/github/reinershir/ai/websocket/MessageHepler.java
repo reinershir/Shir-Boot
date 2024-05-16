@@ -23,25 +23,37 @@ public class MessageHepler {
 	Map<String,List<Message>> historyMsg = new LinkedHashMap<>();
     private Map<String,Message> personalityMap = new LinkedHashMap<>();
     
+    private int getTokenLimitByModel(String model) {
+    	if(model.toLowerCase().startsWith("gpt-4")|| model.toLowerCase().equals("gpt-3.5-turbo-16k")) {
+    		return 1280000;
+    	}
+    	return 2048;
+    }
+    
 	public void cacheContext(String replyContent,String prompt,String openId,String model) {
     	List<Message> message = historyMsg.get(openId);
     	int tokens = CollectionUtils.isEmpty(message)?0:TikTokensUtil.tokens(model, message);
+    	int nextTokens = TikTokensUtil.tokens(model, prompt);
+    	int limit = getTokenLimitByModel(model);
     	//记录历史会话
         if(StringUtils.hasText(replyContent)) {
-        	//Message = msgMap.getHistoryMsg().get(openId);
         	if(message==null) {
         		message = new ArrayList<>();
-//        		Message personality = personalityMap.get(openId);
-//        		if(personality!=null) {
-//        			message.add(personality);
-//        		}
-        	}else if(tokens>=3496) {
-        		// 如果快要超过则清除一半的对话记录
-        		message = message.subList(message.size()/2, message.size());
-//        		Message personality = personalityMap.get(openId);
-//        		if(personality!=null) {
-//        			message.add(personality);
-//        		}
+        	}else if((tokens+nextTokens)>=limit) {
+        		log.info("记录到达上限:{},openid:{}",(tokens=nextTokens),openId);
+        		if(nextTokens<limit) {
+        			Message userMsg = new Message();
+                	userMsg.setRole(Message.Role.USER.getName());
+                	userMsg.setContent(prompt);
+                	message.clear();
+                	message.add(userMsg);
+                	historyMsg.put(openId, message);
+                	return;
+        		}
+        		//如果都超过了，直接清除
+        		message = null;
+            	historyMsg.remove(openId);
+        		return;
         	}
         	Message userMsg = new Message();
         	userMsg.setRole(Message.Role.USER.getName());
@@ -65,11 +77,13 @@ public class MessageHepler {
  		}
  		
         if(!CollectionUtils.isEmpty(message)) {
-        	for (int i = 0; i <message.size(); i++) {
-        		Message msg = message.get(i);
-        		int tokens = TikTokensUtil.tokens(model, allMessage);
+        	int tokens = TikTokensUtil.tokens(model, message);
+        	int limit = getTokenLimitByModel(model);
+        	for (int i = message.size()-1; i >=0; i--) {
+         		Message msg = message.get(i);
         		int nextTokens = TikTokensUtil.tokens(model, msg.getContent());
-        		if((tokens+nextTokens)<4096) {
+        		tokens+=nextTokens;
+        		if(tokens<limit) {
             		// Message m = Message.builder().role(msg.getRole()).content(msg.getContent()).build();
             		allMessage.add(msg);
         		}else {
@@ -79,6 +93,7 @@ public class MessageHepler {
         }
         return allMessage;
     }
+   
 	   
    public void setMask(String mask,String openId) {
        if(StringUtils.hasText(mask)) {
