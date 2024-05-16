@@ -143,21 +143,5 @@ knife4j:
   setting:
     language: zh_cn
     
-thirdParty:
-  feishu:
-    appId: cli_a6a779e0349ad00c
-    appSecret: wJv4wVwTUIiWfcBrxhl2kepAnEOOzkz1
-    encryptKey: 7GzAy1gaiWX7ySCoXD2dEfwkbf6p6WIb
-  wechat:
-    corpid: wwcff2ac616510f7e2
-    agentId: 1000002
-    secret: JB5z-afurvRspNuytV6lfKRsecs59uVo4sqoaZhvkRw
-    token: PSoSL
-    encodingAESKey: tO2j8ExdRt9V2NmMWVH7ItDSSUjfK84Zn20Av5da6QY
-  dingding:
-    appId: 608b2721-8c61-4165-a013-76e000577958
-    agentId: 3096261576
-    clientId: dinglw040qhgxgkzshaf
-    clientSecret: 6BhOEjCGMUXKPCjt5ipLNRGV18FiHyfpOOHvVYy2GtRLItKfpS1gsRHRPpRYz8WZ
-    robotCode: dinglw040qhgxgkzshaf
+
     
