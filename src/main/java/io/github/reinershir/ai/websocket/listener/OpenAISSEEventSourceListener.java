@@ -60,7 +60,7 @@ public class OpenAISSEEventSourceListener extends EventSourceListener {
                     .data("[DONE]")
                     .reconnectTime(3000));
             // 传输完成后自动关闭sse
-            // sseEmitter.complete();   //可视情况关闭
+            //sseEmitter.complete();   //可视情况关闭
             if(callback!=null) {
             	//run callback to save messages
             	this.callback.sseCompleteCallback(sb);
@@ -91,6 +91,7 @@ public class OpenAISSEEventSourceListener extends EventSourceListener {
     public void onClosed(EventSource eventSource) {
         log.info("流式输出返回值总共{}tokens", tokens() - 2);
         log.info("OpenAI关闭sse连接...");
+        sseEmitter.complete();
     }
 
 

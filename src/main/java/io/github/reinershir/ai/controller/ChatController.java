@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,6 +33,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.lark.oapi.Client;
 import com.lark.oapi.core.utils.Jsons;
 import com.lark.oapi.service.im.v1.enums.MsgTypeEnum;
@@ -51,7 +54,6 @@ import io.github.reinershir.ai.service.ChatGPTService;
 import io.github.reinershir.ai.tools.Decrypt;
 import io.github.reinershir.ai.tools.wechat.AesException;
 import io.github.reinershir.ai.tools.wechat.WXBizMsgCrypt;
-import io.github.reinershir.ai.tools.wechat.XMLParse;
 import io.github.reinershir.auth.annotation.OptionType;
 import io.github.reinershir.auth.annotation.Permission;
 import io.github.reinershir.auth.annotation.PermissionMapping;
@@ -74,9 +76,16 @@ public class ChatController {
 	ChatGPTService chatGPTService;
 	@Autowired(required = false)
 	AuthorizeManager authorizeManager;
-	//TODO simpl cache
-	private Map<String,SseEmitter> cache = new LinkedHashMap<>();
+
+	private Cache<String,SseEmitter> cache;
+	
 	ExecutorService executorService = Executors.newFixedThreadPool(48);
+	
+	public ChatController() {
+		cache = CacheBuilder.newBuilder()
+        .expireAfterWrite(240, TimeUnit.SECONDS)
+        .build();
+	}
 	
 	@Value("${thirdParty.feishu.appId}")
 	private String appId;
@@ -121,16 +130,19 @@ public class ChatController {
                                 .id(token)
                                 .name("error！")
                                 .data(Message.builder().content("error！").build())
-                                .reconnectTime(3000));
+                                .reconnectTime(8000));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
         );
         try {
-            sseEmitter.send(SseEmitter.event().reconnectTime(5000));
+            sseEmitter.send(SseEmitter.event().reconnectTime(8000));
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        if(cache.getIfPresent(token) !=null) {
+        	cache.invalidate(token);
         }
         cache.put(token, sseEmitter);
         log.info("[{}]创建sse连接成功！", token);
@@ -144,7 +156,7 @@ public class ChatController {
 	public Result<String> chat(@RequestBody WebRequestMessage requestDTO,HttpServletRequest request){
 		String token = authorizeManager.getTokenInfo(request).getUserId();
 		//String token = request.getHeader("Access-Token");
-		SseEmitter sseEmitter = cache.get(token);
+		SseEmitter sseEmitter = cache.getIfPresent(token);
 		log.info("sse =======================> {}",sseEmitter);
 		if(sseEmitter==null) {
 			log.warn("无法获取到sse对象，TOKEN:{}",token);

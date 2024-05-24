@@ -250,7 +250,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
 	public boolean resetPassword(Long userId,String password) {
 		User user = getById(userId);
 		if(user!=null) {
-			user.setPassword(this.getEncodingString(user.getLoginName(), MD5.encode(password)));
+			user.setPassword(this.getEncodingString(user.getLoginName(),password));
 			if(baseMapper.updateById(user)>0) {
 				return true;
 			}

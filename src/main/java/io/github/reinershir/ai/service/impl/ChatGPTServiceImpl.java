@@ -265,6 +265,7 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
 		if(StringUtils.hasText(request.getMask())) {
 			messageHepler.setMask(request.getMask(), openId);
 		}
+		String model = StringUtils.hasText(request.getModel())?request.getModel():this.model;
 		List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model);
         Message message = Message.builder().role(Message.Role.USER).content(request.getPrompt()).build();
         allMessage.add(message);
@@ -278,19 +279,19 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
         		messageHepler.cacheContext(messages.toString(), request.getPrompt(), openId,model);
         	}
         	if(!StringUtils.hasText(request.getModel())) {
-        		request.setModel(this.model);
+        		request.setModel(model);
         	}
         	saveChatHistory(request, messages, userId!=null?userId:0l, allMessage);
         });
-        ChatCompletion chatCompletion = ChatCompletion.builder().model(StringUtils.hasText(request.getModel())?model:this.model)
+        ChatCompletion chatCompletion = ChatCompletion.builder().model(model)
         		.messages(allMessage).build();
         streamClient.streamChatCompletion(chatCompletion, eventSourceListener);
 	}
 	
 	private void saveChatHistory(WebRequestMessage request,StringBuffer message,Long userId,List<Message> allMessage) {
 		allMessage.add(Message.builder().role(Message.Role.SYSTEM).content(message.toString()).build());
-		//尚不支持gpt-4o计算方式
-		int tokenCount = TikTokensUtil.tokens(request.getModel().toLowerCase().equals("gpt-4o")?"gpt-4":request.getModel(),allMessage);
+		//TODO 尚不支持gpt-4o计算方式
+		int tokenCount = TikTokensUtil.tokens(request.getModel().toLowerCase().startsWith("gpt-4o")?"gpt-4":request.getModel(),allMessage);
 		chatHistoryService.save(new ChatHistory(request.getPrompt(), message.toString(), request.getMask(), userId,Float.valueOf(tokenCount),request.getSessionId(), new Date()));
 	}
 

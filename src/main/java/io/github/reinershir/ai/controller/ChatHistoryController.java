@@ -1,6 +1,7 @@
 package io.github.reinershir.ai.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,6 +53,11 @@ public class ChatHistoryController extends BaseController{
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize) {
 		QueryWrapper<ChatHistory> queryWrapper = QueryHelper.initQueryWrapper(entity);
+		if(StringUtils.hasText(entity.getSessionId())) {
+			queryWrapper.orderByAsc("CREATE_TIME");
+		}else {
+			queryWrapper.orderByDesc("CREATE_TIME");
+		}
 		Page<ChatHistory> page = new Page<ChatHistory>(pageNo, pageSize);
 		IPage<ChatHistory> pageList = chatHistoryService.page(page, queryWrapper);
 		return Result.ok(pageList);

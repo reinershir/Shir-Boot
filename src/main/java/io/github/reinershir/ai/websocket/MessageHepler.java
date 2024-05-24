@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.unfbx.chatgpt.entity.chat.ChatCompletion;
 import com.unfbx.chatgpt.entity.chat.Message;
 import com.unfbx.chatgpt.utils.TikTokensUtil;
 
@@ -25,14 +26,15 @@ public class MessageHepler {
     
     private int getTokenLimitByModel(String model) {
     	if(model.toLowerCase().startsWith("gpt-4")|| model.toLowerCase().equals("gpt-3.5-turbo-16k")) {
-    		return 1280000;
+    		return 160000;
     	}
     	return 2048;
     }
     
 	public void cacheContext(String replyContent,String prompt,String openId,String model) {
     	List<Message> message = historyMsg.get(openId);
-    	int tokens = CollectionUtils.isEmpty(message)?0:TikTokensUtil.tokens(model, message);
+    	//TODO 暂不支持gpt-4o计算
+    	int tokens = CollectionUtils.isEmpty(message)?0:TikTokensUtil.tokens(model.startsWith("gpt-4o")?ChatCompletion.Model.GPT_4_0613.getName():model, message);
     	int nextTokens = TikTokensUtil.tokens(model, prompt);
     	int limit = getTokenLimitByModel(model);
     	//记录历史会话
@@ -77,7 +79,8 @@ public class MessageHepler {
  		}
  		
         if(!CollectionUtils.isEmpty(message)) {
-        	int tokens = TikTokensUtil.tokens(model, message);
+        	//该工具暂不支持gpt-4o
+        	int tokens = TikTokensUtil.tokens(model.startsWith("gpt-4o")?ChatCompletion.Model.GPT_4_0613.getName():model, message);
         	int limit = getTokenLimitByModel(model);
         	for (int i = message.size()-1; i >=0; i--) {
          		Message msg = message.get(i);
