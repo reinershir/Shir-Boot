@@ -117,7 +117,7 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
     
     public String chat(String prompt,String openId,String model){
     	model = StringUtils.hasText(model)?model:this.model;
-        List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model);
+        List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model,null);
         //最新GPT-3.5-Turbo模型
         Message message = Message.builder().role(Message.Role.USER).content(prompt).build();
         allMessage.add(message);
@@ -141,7 +141,7 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
 
 	@Override
 	public void chatCompletions(String prompt, String openId,Session session, String model) {
-		List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model);
+		List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model,null);
         
         //最新GPT-3.5-Turbo模型
         Message message = Message.builder().role(Message.Role.USER).content(prompt).build();
@@ -158,7 +158,7 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
 	@Override
 	public void chatCompletions(WebRequestMessage request, String openId,String model,Session session, String chatPerson) {
 			//此方法是用于前端附带历史消息方法，所以该方法只会获取到设置人设时配置的历史消息，而不是真实的历史消息缓存
-			List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model);
+			List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model,request.getSessionId());
 			if(!CollectionUtils.isEmpty(request.getMessages())) {
 				request.getMessages().forEach(msg->{
 					Message m = Message.builder().role(msg.getRole()).content(msg.getContent()).build();
@@ -266,7 +266,7 @@ public class ChatGPTServiceImpl  implements io.github.reinershir.ai.service.Chat
 			messageHepler.setMask(request.getMask(), openId);
 		}
 		String model = StringUtils.hasText(request.getModel())?request.getModel():this.model;
-		List<Message> allMessage = messageHepler.getCacheContextByOpenId(openId,model);
+		List<Message> allMessage = request.getEnableContext() ? messageHepler.getCacheContextByOpenId(openId,model,request.getSessionId()): new ArrayList<>();
         Message message = Message.builder().role(Message.Role.USER).content(request.getPrompt()).build();
         allMessage.add(message);
         log.info("以stream发送问题：{}，openId:{}",JSON.toJSONString(message),openId);
